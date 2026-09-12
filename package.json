@@ -1,6 +1,9 @@
 {
   "name": "sparkcord",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "File-based Discord.js v14 framework. Slash, prefix, events, cooldowns, permissions.",
   "keywords": [
     "discord",
