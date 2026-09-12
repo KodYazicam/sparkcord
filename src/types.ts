@@ -10,7 +10,7 @@ export interface CommandOption {
 
 export interface CommandContext {
   bot: unknown;
-  command: CommandDefinition;
+  command: CommandDefinition<CommandContext>;
   userId: string;
   inGuild: boolean;
   memberPermissions: Set<string>;

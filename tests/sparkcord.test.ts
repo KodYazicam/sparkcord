@@ -167,5 +167,6 @@ describe("file listing + cli", () => {
     expect(run(["init", dir])).toBe(0);
     expect(existsSync(join(dir, "package.json"))).toBe(true);
     expect(existsSync(join(dir, "src", "commands", "ping.ts"))).toBe(true);
+    expect(existsSync(join(dir, "src", "load-env.ts"))).toBe(true);
   });
 });

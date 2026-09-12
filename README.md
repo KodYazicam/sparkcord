@@ -63,7 +63,7 @@ await client.login(process.env.DISCORD_TOKEN);
 | Cooldowns | Per user, per command |
 | Permissions | `guildOnly`, `ownerOnly`, Discord permission names |
 | Dev guild | Instant slash updates while iterating |
-| Scaffold | `npx sparkcord init my-bot` (Node 22+ runs the template without tsx) |
+| Scaffold | `npx sparkcord init my-bot` (Node 22.6+, loads `.env` automatically) |
 
 ## Command module
 

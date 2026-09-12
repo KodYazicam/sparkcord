@@ -2,6 +2,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client, GatewayIntentBits } from "discord.js";
 import { createSparkBot } from "sparkcord";
+import { loadEnv } from "./load-env.ts";
+
+loadEnv(join(dirname(fileURLToPath(import.meta.url)), "..", ".env"));
 
 const here = dirname(fileURLToPath(import.meta.url));
 const token = process.env.DISCORD_TOKEN;

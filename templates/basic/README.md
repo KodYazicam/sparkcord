@@ -9,4 +9,4 @@ npm install
 npm start
 ```
 
-Node 22+ runs TypeScript via `--experimental-strip-types`. On Node 20 use `npm run start:tsx` after `npm i -D tsx`.
+Requires **Node 22.6+**. `.env` is loaded by `src/load-env.ts` (and `--env-file` on start).
