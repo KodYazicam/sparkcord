@@ -1,0 +1,62 @@
+{
+  "name": "sparkcord",
+  "version": "1.0.0",
+  "description": "File-based Discord.js v14 framework. Slash, prefix, events, cooldowns, permissions.",
+  "keywords": [
+    "discord",
+    "discord.js",
+    "bot",
+    "framework",
+    "slash-commands",
+    "typescript"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Batuhan (KodYazicam) <https://github.com/KodYazicam>",
+  "homepage": "https://github.com/KodYazicam/sparkcord",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KodYazicam/sparkcord.git"
+  },
+  "type": "module",
+  "bin": {
+    "sparkcord": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "templates",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "discord.js": "^14.16.0"
+  },
+  "peerDependenciesMeta": {
+    "discord.js": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  }
+}
