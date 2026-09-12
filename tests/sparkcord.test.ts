@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -112,6 +112,30 @@ describe("SparkBot invoke", () => {
     expect(owner.ok).toBe(true);
   });
 
+  it("registers slash commands if the client is already ready", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-"));
+    const bot = new SparkBot({ commandsDir: dir, prefix: "!" });
+    bot.commands.register({ definition: ping, path: "ping.ts" });
+    let registered = 0;
+    const client = {
+      user: { id: "1", tag: "bot#0000" },
+      on: () => client,
+      once: () => client,
+      application: {
+        commands: {
+          set: async () => {
+            registered += 1;
+            return [];
+          },
+        },
+      },
+    };
+    bot.attach(client);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(registered).toBe(1);
+    expect(bot.ready).toBe(true);
+  });
+
   it("handles prefix messages", async () => {
     const dir = mkdtempSync(join(tmpdir(), "sparkcord-"));
     const bot = new SparkBot({ commandsDir: dir, prefix: "!" });
@@ -136,5 +160,12 @@ describe("file listing + cli", () => {
     expect(listModules(dir).some((p) => p.endsWith(".d.ts"))).toBe(false);
     expect(run(["--help"])).toBe(0);
     expect(pathToFileURL(dir).href).toContain("file:");
+  });
+
+  it("scaffolds a starter bot", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-init-"));
+    expect(run(["init", dir])).toBe(0);
+    expect(existsSync(join(dir, "package.json"))).toBe(true);
+    expect(existsSync(join(dir, "src", "commands", "ping.ts"))).toBe(true);
   });
 });

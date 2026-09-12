@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { cpSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { invokedDirectly } from "./main.js";
 
 function help(): string {
   return `
@@ -31,12 +32,19 @@ export function run(argv: string[], cwd = process.cwd()): number {
     console.error(`unknown command: ${cmd}`);
     return 1;
   }
-  const target = join(cwd, argv[1] && !argv[1].startsWith("-") ? argv[1] : ".");
+  const requested = argv[1] && !argv[1].startsWith("-") ? argv[1] : ".";
+  const target = isAbsolute(requested) ? requested : join(cwd, requested);
   mkdirSync(target, { recursive: true });
   const here = dirname(fileURLToPath(import.meta.url));
   const template = join(here, "..", "templates", "basic");
   if (existsSync(template)) {
-    cpSync(template, target, { recursive: true, force: false });
+    for (const name of readdirSync(template)) {
+      cpSync(join(template, name), join(target, name), {
+        recursive: true,
+        force: false,
+        errorOnExist: false,
+      });
+    }
   } else {
     writeFileSync(
       join(target, "package.json"),
@@ -56,5 +64,4 @@ export function run(argv: string[], cwd = process.cwd()): number {
   return 0;
 }
 
-const isDirect = process.argv[1]?.includes("cli");
-if (isDirect) process.exitCode = run(process.argv.slice(2));
+if (invokedDirectly(import.meta.url)) process.exitCode = run(process.argv.slice(2));

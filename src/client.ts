@@ -59,14 +59,16 @@ export class SparkBot {
   attach(client: SparkClientLike = this.options.client as SparkClientLike): this {
     if (!client) throw new Error("No Discord client provided.");
     this.options.client = client;
-    client.once("ready", async () => {
+    const onReady = async () => {
       this.ready = true;
       try {
         await this.registerSlash(client);
       } catch (error) {
         console.error("[sparkcord] slash registration failed:", (error as Error).message);
       }
-    });
+    };
+    client.once("ready", onReady);
+    if (client.user) void onReady();
     client.on("interactionCreate", (interaction) => {
       void this.handleInteraction(interaction);
     });
