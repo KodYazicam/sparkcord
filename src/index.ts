@@ -8,6 +8,7 @@ export { run as runCli } from "./cli.js";
 export { invokedDirectly } from "./main.js";
 export type {
   CommandDefinition,
+  CommandContext,
   CommandKind,
   CommandOption,
   EventDefinition,

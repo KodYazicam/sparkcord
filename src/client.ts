@@ -150,12 +150,16 @@ export class SparkBot {
       );
       if (left > 0) return { ok: false, reason: "cooldown", remainingMs: left };
     }
-    const value = await loaded.definition.run({
-      bot: this,
-      command: loaded.definition,
-      ...ctx,
-    });
-    return { ok: true, value };
+    try {
+      const value = await loaded.definition.run({
+        bot: this,
+        command: loaded.definition,
+        ...ctx,
+      });
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, reason: (error as Error).message || "command-error" };
+    }
   }
 }
 

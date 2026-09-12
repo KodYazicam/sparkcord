@@ -8,7 +8,18 @@ export interface CommandOption {
   choices?: Array<{ name: string; value: string | number }>;
 }
 
-export interface CommandDefinition<Ctx = unknown> {
+export interface CommandContext {
+  bot: unknown;
+  command: CommandDefinition;
+  userId: string;
+  inGuild: boolean;
+  memberPermissions: Set<string>;
+  raw: unknown;
+  args?: string[];
+  kind: "slash" | "prefix";
+}
+
+export interface CommandDefinition<Ctx = CommandContext> {
   name: string;
   description: string;
   kind?: CommandKind;
