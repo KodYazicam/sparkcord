@@ -16,7 +16,9 @@ export interface CommandContext {
   memberPermissions: Set<string>;
   raw: unknown;
   args?: string[];
+  options: Record<string, unknown>;
   kind: "slash" | "prefix";
+  reply: (content: string, extra?: { ephemeral?: boolean }) => Promise<unknown> | unknown;
 }
 
 export interface CommandDefinition<Ctx = CommandContext> {
@@ -46,6 +48,8 @@ export interface SparkOptions {
   owners?: string[];
   devGuildId?: string;
   client?: SparkClientLike;
+  autoRegister?: boolean;
+  denyReplies?: boolean;
 }
 
 export interface SparkClientLike {

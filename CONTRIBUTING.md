@@ -1,11 +1,13 @@
 # Contributing to sparkcord
 
-KYAL-1.0 — attribution stays with [KodYazicam](https://github.com/KodYazicam).
-
 ```bash
-npm install
+npm ci
 npm test
-npm run build
+npm run typecheck
 ```
 
-Keep Discord.js as a peer dependency. Framework tests must not require a live gateway token.
+- Tests must not open a Discord gateway or read a token.
+- `discord.js` stays a required peer, not a runtime import of the library.
+- Denied commands should reply unless `denyReplies: false`.
+- `init` must not overwrite without `--force`.
+- Keep KYAL-1.0 attribution.

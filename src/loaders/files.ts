@@ -40,14 +40,25 @@ export function unwrapModule<T>(mod: Record<string, unknown>): T {
   return candidate as T;
 }
 
+function assertLoadable(file: string): void {
+  const stripTypes = process.execArgv.some((a) => a.includes("strip-types") || a.includes("tsx"));
+  const nativeTs = Boolean((process as NodeJS.Process & { features?: { typescript?: boolean } }).features?.typescript);
+  if (file.endsWith(".ts") && !nativeTs && !stripTypes) {
+    throw new Error(
+      `Cannot import TypeScript command ${file} on this Node process. Compile to .js, run Node 22.6+ with --experimental-strip-types, or use tsx.`,
+    );
+  }
+}
+
 export async function loadCommands(dir: string, importer?: (url: string) => Promise<unknown>): Promise<LoadedCommand[]> {
   const importFn = importer ?? ((url: string) => import(url));
   const loaded: LoadedCommand[] = [];
   for (const file of listModules(dir)) {
+    assertLoadable(file);
     const mod = (await importFn(pathToFileURL(file).href)) as Record<string, unknown>;
     const definition = unwrapModule<CommandDefinition>(mod);
     if (!definition?.name || typeof definition.run !== "function") {
-      throw new Error(`Invalid command module: ${file}`);
+      throw new Error(`Invalid command module: ${file} (need export default { name, description, run })`);
     }
     loaded.push({ definition, path: file });
   }
@@ -58,10 +69,11 @@ export async function loadEvents(dir: string, importer?: (url: string) => Promis
   const importFn = importer ?? ((url: string) => import(url));
   const loaded: LoadedEvent[] = [];
   for (const file of listModules(dir)) {
+    assertLoadable(file);
     const mod = (await importFn(pathToFileURL(file).href)) as Record<string, unknown>;
     const definition = unwrapModule<EventDefinition>(mod);
     if (!definition?.name || typeof definition.run !== "function") {
-      throw new Error(`Invalid event module: ${file}`);
+      throw new Error(`Invalid event module: ${file} (need export default { name, run })`);
     }
     loaded.push({ definition, path: file });
   }

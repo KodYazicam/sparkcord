@@ -2,7 +2,7 @@ import { CommandRegistry } from "./handlers/registry.js";
 import { loadCommands, loadEvents } from "./loaders/files.js";
 import { checkCommandAccess } from "./utils/permissions.js";
 import { CooldownStore, cooldownKey } from "./utils/cooldown.js";
-import { parsePrefixArgs, toSlashPayload } from "./utils/slash.js";
+import { parsePrefixArgs, toSlashPayload, optionsFromPrefix, optionsFromSlash, replyTo } from "./utils/slash.js";
 import type {
   LoadedEvent,
   SparkClientLike,
@@ -22,10 +22,14 @@ export class SparkBot {
   readonly cooldowns = new CooldownStore();
   events: LoadedEvent[] = [];
   ready = false;
+  private attached = false;
+  private registering = false;
 
   constructor(options: SparkOptions) {
     this.options = {
       prefix: "!",
+      autoRegister: true,
+      denyReplies: true,
       ...options,
       commandsDir: options.commandsDir,
     };
@@ -58,13 +62,20 @@ export class SparkBot {
 
   attach(client: SparkClientLike = this.options.client as SparkClientLike): this {
     if (!client) throw new Error("No Discord client provided.");
+    if (this.attached && this.options.client === client) return this;
     this.options.client = client;
+    this.attached = true;
     const onReady = async () => {
       this.ready = true;
+      if (this.options.autoRegister === false) return;
+      if (this.registering) return;
+      this.registering = true;
       try {
         await this.registerSlash(client);
       } catch (error) {
         console.error("[sparkcord] slash registration failed:", (error as Error).message);
+      } finally {
+        this.registering = false;
       }
     };
     client.once("ready", onReady);
@@ -102,6 +113,7 @@ export class SparkBot {
       memberPermissions: new Set(ix.member?.permissions?.toArray?.() ?? []),
       raw: interaction,
       kind: "slash",
+      options: optionsFromSlash(interaction),
     });
   }
 
@@ -124,6 +136,7 @@ export class SparkBot {
       raw: message,
       args: parsed.args,
       kind: "prefix",
+      options: optionsFromPrefix(parsed.args, loaded.definition.options),
     });
   }
 
@@ -136,29 +149,47 @@ export class SparkBot {
       raw: unknown;
       args?: string[];
       kind: "slash" | "prefix";
+      options?: Record<string, unknown>;
     },
   ): Promise<InvokeResult> {
     const loaded =
       ctx.kind === "prefix" ? this.commands.prefixable(name) : this.commands.resolve(name);
     if (!loaded) return { ok: false, reason: "unknown" };
     const denied = checkCommandAccess(loaded.definition, ctx, this.options.owners ?? []);
-    if (denied) return { ok: false, reason: denied };
+    if (denied) {
+      if (this.options.denyReplies !== false) await replyTo(ctx.raw, denied, { ephemeral: true });
+      return { ok: false, reason: denied };
+    }
     if (loaded.definition.cooldown && loaded.definition.cooldown > 0) {
       const left = this.cooldowns.remaining(
         cooldownKey(loaded.definition.name, ctx.userId),
         loaded.definition.cooldown,
       );
-      if (left > 0) return { ok: false, reason: "cooldown", remainingMs: left };
+      if (left > 0) {
+        const seconds = Math.ceil(left / 1000);
+        if (this.options.denyReplies !== false) {
+          await replyTo(ctx.raw, `Please wait ${seconds}s before using /${loaded.definition.name} again.`, {
+            ephemeral: true,
+          });
+        }
+        return { ok: false, reason: "cooldown", remainingMs: left };
+      }
     }
     try {
       const value = await loaded.definition.run({
+        ...ctx,
         bot: this,
         command: loaded.definition,
-        ...ctx,
+        options: ctx.options ?? {},
+        reply: (content, extra) => replyTo(ctx.raw, content, extra),
       });
       return { ok: true, value };
     } catch (error) {
-      return { ok: false, reason: (error as Error).message || "command-error" };
+      const message = (error as Error).message || "command-error";
+      if (this.options.denyReplies !== false) {
+        await replyTo(ctx.raw, "Command failed. Check the bot logs.", { ephemeral: true });
+      }
+      return { ok: false, reason: message };
     }
   }
 }

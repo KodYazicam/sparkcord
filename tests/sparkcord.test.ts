@@ -70,7 +70,7 @@ describe("prefix parser", () => {
 describe("SparkBot invoke", () => {
   it("runs commands, enforces cooldown and owners", async () => {
     const dir = mkdtempSync(join(tmpdir(), "sparkcord-"));
-    const bot = new SparkBot({ commandsDir: dir, owners: ["owner"], prefix: "!" });
+    const bot = new SparkBot({ commandsDir: dir, owners: ["owner"], prefix: "!", denyReplies: false });
     bot.commands.register({ definition: ping, path: "ping.ts" });
     bot.commands.register({ definition: secret, path: "secret.ts" });
 
@@ -97,7 +97,7 @@ describe("SparkBot invoke", () => {
       userId: "u1",
       inGuild: true,
       memberPermissions: new Set(),
-      raw: {},
+      raw: { reply: async () => undefined },
       kind: "slash",
     });
     expect(denied.ok).toBe(false);
@@ -138,7 +138,7 @@ describe("SparkBot invoke", () => {
 
   it("handles prefix messages", async () => {
     const dir = mkdtempSync(join(tmpdir(), "sparkcord-"));
-    const bot = new SparkBot({ commandsDir: dir, prefix: "!" });
+    const bot = new SparkBot({ commandsDir: dir, prefix: "!", denyReplies: false });
     bot.commands.register({ definition: ping, path: "ping.ts" });
     const result = await bot.handleMessage({
       author: { bot: false, id: "u2" },

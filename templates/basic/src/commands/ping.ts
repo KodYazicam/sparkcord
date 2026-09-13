@@ -6,11 +6,10 @@ const ping: CommandDefinition = {
   kind: "both",
   cooldown: 3,
   async run(ctx) {
-    const raw = ctx.raw as { reply?: (content: string) => unknown; createdTimestamp?: number };
+    const raw = ctx.raw as { createdTimestamp?: number };
     const start = Date.now();
     const text = `Pong · ${raw.createdTimestamp ? start - raw.createdTimestamp : 0}ms`;
-    if (typeof raw.reply === "function") return raw.reply(text);
-    return text;
+    return ctx.reply(text);
   },
 };
 
