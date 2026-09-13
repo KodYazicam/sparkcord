@@ -21,7 +21,9 @@ sparkcord is a thin layer on top of Discord.js. You write command modules. The f
 Stribog-Bot and discord-music-panel are full products. sparkcord is the reusable core: loaders, registry, cooldowns, slash payload, prefix parser, option maps, deny replies. Tests run **without a Discord token**.
 
 ```bash
-npx sparkcord init my-bot
+git clone https://github.com/KodYazicam/sparkcord.git
+cd sparkcord && npm ci && npm run build
+node dist/cli.js init my-bot
 ```
 
 ## Table of contents
@@ -52,16 +54,20 @@ npx sparkcord init my-bot
 
 You need a bot token from the [Discord Developer Portal](https://discord.com/developers/applications). Enable **Message Content Intent** if you use prefix commands.
 
-`discord.js` is a **required** peer. `npm install sparkcord` without it will warn; `createSparkBot` needs it at runtime.
+`discord.js` is a **required** peer. Install it next to sparkcord after you clone this repo (`npm ci` in a bot that file:depends on sparkcord).
 
 ## Scaffold a bot (recommended)
 
 ```bash
-npx sparkcord init my-bot
-cd my-bot
+git clone https://github.com/KodYazicam/sparkcord.git
+cd sparkcord
+npm ci
+npm run build
+node dist/cli.js init ../my-bot
+cd ../my-bot
+# point package.json at the clone, then:
 cp .env.example .env
 # put DISCORD_TOKEN=... in .env
-# optional: DEV_GUILD_ID, OWNER_IDS (comma-separated snowflakes)
 npm install
 npm start
 ```
@@ -96,7 +102,9 @@ Start with a **dev guild** (`DEV_GUILD_ID`) so slash commands update in seconds 
 ## Install as a library
 
 ```bash
-npm install sparkcord discord.js
+# in your bot, after cloning sparkcord next to it:
+npm install discord.js
+npm install ../sparkcord
 ```
 
 ```ts
@@ -229,9 +237,9 @@ Payload is built from `toSlashPayload`. You can also call `bot.registerSlash(cli
 ## CLI
 
 ```bash
-npx sparkcord init [dir] [--force]
-npx sparkcord --help
-npx sparkcord --version
+node dist/cli.js init [dir] [--force]
+node dist/cli.js --help
+node dist/cli.js --version
 ```
 
 `init` copies `templates/basic` into `dir` (`.` if omitted). Absolute paths work. Missing template from a broken install exits `1` instead of writing a stub and claiming success.

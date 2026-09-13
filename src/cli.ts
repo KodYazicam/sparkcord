@@ -13,9 +13,9 @@ Drop a file in commands/. Slash, prefix, cooldowns, and permissions
 are wired for you. Tests never need a Discord token.
 
 Usage:
-  sparkcord init [dir]     Scaffold a starter bot (Node 22.6+)
-  sparkcord --help
-  sparkcord --version
+  node dist/cli.js init [dir]     Scaffold a starter bot (Node 22.6+)
+  node dist/cli.js --help
+  node dist/cli.js --version
 
 The library itself runs on Node 20+ with compiled .js command files.
 The starter uses --experimental-strip-types, so it needs Node 22.6+.
@@ -72,7 +72,7 @@ export function run(argv: string[], cwd = process.cwd()): number {
           name: "sparkcord-bot",
           private: true,
           type: "module",
-          dependencies: { sparkcord: "^1.0.0", "discord.js": "^14.16.0" },
+          dependencies: { sparkcord: "file:..", "discord.js": "^14.16.0" },
         },
         null,
         2,
