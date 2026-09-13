@@ -58,6 +58,8 @@ You need a bot token from the [Discord Developer Portal](https://discord.com/dev
 
 ## Scaffold a bot (recommended)
 
+Not on npm. Clone this repo, then:
+
 ```bash
 git clone https://github.com/KodYazicam/sparkcord.git
 cd sparkcord
@@ -277,6 +279,8 @@ If prefix commands silently do nothing, Message Content is off in the portal.
 **TypeScript only?** JS works. Default export a plain object with `name`, `description`, `run`.
 
 **Tests?** `npm test` in this repo uses vitest and never opens a gateway.
+
+**Is it on npm?** No. Clone this repo.
 
 ## License — KYAL-1.0
 
