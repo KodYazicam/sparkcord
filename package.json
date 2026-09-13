@@ -42,14 +42,15 @@
   "peerDependencies": {
     "discord.js": "^14.16.0"
   },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "discord.js": "^14.16.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.build.json --noEmit"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.0",
-    "typescript": "^5.7.0",
-    "vitest": "^2.1.0"
   }
 }
