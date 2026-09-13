@@ -3,6 +3,7 @@ import { loadCommands, loadEvents } from "./loaders/files.js";
 import { checkCommandAccess } from "./utils/permissions.js";
 import { CooldownStore, cooldownKey } from "./utils/cooldown.js";
 import { parsePrefixArgs, toSlashPayload, optionsFromPrefix, optionsFromSlash, replyTo } from "./utils/slash.js";
+import { InteractionRouter, interactionKind } from "./utils/interactions.js";
 import type {
   LoadedEvent,
   SparkClientLike,
@@ -20,6 +21,7 @@ export class SparkBot {
   readonly options: Required<Pick<SparkOptions, "commandsDir" | "prefix">> & SparkOptions;
   readonly commands = new CommandRegistry();
   readonly cooldowns = new CooldownStore();
+  readonly interactions = new InteractionRouter();
   events: LoadedEvent[] = [];
   ready = false;
   private attached = false;
@@ -103,6 +105,10 @@ export class SparkBot {
       guildId?: string | null;
       member?: { permissions?: { toArray?: () => string[] } };
     };
+    const kind = interactionKind(interaction);
+    if (kind === "button" || kind === "select" || kind === "modal" || kind === "autocomplete") {
+      return this.interactions.dispatch(interaction, this);
+    }
     if (typeof ix.isChatInputCommand === "function" && !ix.isChatInputCommand()) {
       return { ok: false, reason: "not-slash" };
     }

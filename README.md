@@ -187,7 +187,7 @@ export default {
 
 `once: true` uses `client.once`. Extra Discord arguments are forwarded after `ctx`.
 
-Button / autocomplete / context-menu routers are **not** in v1. Handle those on `client` yourself, or look at Stribog-Bot’s allowlisted `customId` loader.
+Button / select / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
 
 ## Command context
 

@@ -8,6 +8,7 @@ import { CommandRegistry } from "../src/handlers/registry.js";
 import { checkCommandAccess } from "../src/utils/permissions.js";
 import { CooldownStore } from "../src/utils/cooldown.js";
 import { parsePrefixArgs, toSlashPayload } from "../src/utils/slash.js";
+import { InteractionRouter, customIdHead, interactionKind } from "../src/utils/interactions.js";
 import { listModules } from "../src/loaders/files.js";
 import { run } from "../src/cli.js";
 import type { CommandDefinition } from "../src/types.js";
@@ -54,6 +55,25 @@ describe("permissions + cooldown", () => {
     const store = new CooldownStore();
     expect(store.remaining("ping:1", 5, 1000)).toBe(0);
     expect(store.remaining("ping:1", 5, 2000)).toBeGreaterThan(0);
+  });
+});
+
+describe("interaction router", () => {
+  it("routes allowlisted custom ids and rejects path-like ids", async () => {
+    const router = new InteractionRouter();
+    let seen = "";
+    router.onComponent({
+      customId: "ticket",
+      run: ({ args }) => {
+        seen = args.join(",");
+        return "ok";
+      },
+    });
+    expect(customIdHead({ customId: "../etc/passwd" })).toBeNull();
+    expect(interactionKind({ isButton: () => true })).toBe("button");
+    const result = await router.dispatch({ isButton: () => true, customId: "ticket_close_12" }, null);
+    expect(result.ok).toBe(true);
+    expect(seen).toBe("close,12");
   });
 });
 

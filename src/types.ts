@@ -50,6 +50,7 @@ export interface SparkOptions {
   client?: SparkClientLike;
   autoRegister?: boolean;
   denyReplies?: boolean;
+  componentsDir?: string;
 }
 
 export interface SparkClientLike {
