@@ -18,7 +18,7 @@
 
 sparkcord is a thin layer on top of Discord.js. You write command modules. The framework loads them, registers slash commands, and routes both `/ping` and `!ping`.
 
-Stribog-Bot and discord-music-panel are full products. sparkcord is the reusable core: loaders, registry, cooldowns, slash payload, prefix parser, option maps, deny replies. Tests run **without a Discord token**.
+Stribog-Bot and discord-music-panel are full products. sparkcord is the reusable core: loaders, registry, cooldowns, slash payload, prefix parser, option maps, deny replies, and a token-free `validate` command. Tests run **without a Discord token**.
 
 ```bash
 git clone https://github.com/KodYazicam/sparkcord.git
@@ -240,11 +240,21 @@ Payload is built from `toSlashPayload`. You can also call `bot.registerSlash(cli
 
 ```bash
 node dist/cli.js init [dir] [--force]
+node dist/cli.js validate [dir]
 node dist/cli.js --help
 node dist/cli.js --version
 ```
 
 `init` copies `templates/basic` into `dir` (`.` if omitted). Absolute paths work. Missing template from a broken install exits `1` instead of writing a stub and claiming success.
+
+`validate` loads a commands directory the same way the bot does, then lints every definition **without a Discord token or client**:
+
+```bash
+node dist/cli.js validate src/commands
+# validate  6 command(s) OK in /home/me/bot/src/commands
+```
+
+Checks: `name` is 1-32 chars of `[a-z0-9_-]`, `description` is 1-100 chars, `kind` / `cooldown` / `guildOnly` / `ownerOnly` / `aliases` / `options` types, option names and `type` values, choice shapes, duplicate names and aliases, and module import failures. With no `dir` argument it tries `src/commands` then `commands`. Exit `0` = ready to run, `1` = issues (each printed as `error <file>: <message>`). Works in CI: run it before deploying, after pulling, or in a pre-push hook.
 
 ## Intents
 

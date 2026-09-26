@@ -10,7 +10,8 @@ import { CooldownStore } from "../src/utils/cooldown.js";
 import { parsePrefixArgs, toSlashPayload } from "../src/utils/slash.js";
 import { InteractionRouter, customIdHead, interactionKind } from "../src/utils/interactions.js";
 import { listModules } from "../src/loaders/files.js";
-import { run } from "../src/cli.js";
+import { run, validateDir } from "../src/cli.js";
+import { validateDefinition, validateCommands } from "../src/validate.js";
 import type { CommandDefinition } from "../src/types.js";
 
 const ping: CommandDefinition = {
@@ -188,5 +189,77 @@ describe("file listing + cli", () => {
     expect(existsSync(join(dir, "package.json"))).toBe(true);
     expect(existsSync(join(dir, "src", "commands", "ping.ts"))).toBe(true);
     expect(existsSync(join(dir, "src", "load-env.ts"))).toBe(true);
+  });
+});
+
+describe("validate", () => {
+  it("reports definition problems without touching Discord", () => {
+    const bad = {
+      name: "Ping",
+      description: "",
+      kind: "global" as const,
+      cooldown: -2,
+      guildOnly: "yes",
+      aliases: ["P"],
+      options: [{ name: "User Input!", description: "", type: "text" }],
+      run: () => undefined,
+    };
+    const messages = validateDefinition(bad as unknown as CommandDefinition, "bad.js").map((i) => i.message);
+    expect(messages.some((m) => m.includes("name must be"))).toBe(true);
+    expect(messages.some((m) => m.includes("description is required"))).toBe(true);
+    expect(messages.some((m) => m.includes("kind must be"))).toBe(true);
+    expect(messages.some((m) => m.includes("cooldown must be"))).toBe(true);
+    expect(messages.some((m) => m.includes("guildOnly must be"))).toBe(true);
+    expect(messages.some((m) => m.includes("lowercase"))).toBe(true);
+    expect(messages.some((m) => m.includes("unknown type"))).toBe(true);
+    expect(validateDefinition(ping, "ping.js")).toEqual([]);
+  });
+
+  it("loads a real directory, catches duplicates, and counts commands", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-validate-"));
+    writeFileSync(
+      join(dir, "good.js"),
+      'export default { name: "ping", description: "pong", run: () => "pong" };\n',
+    );
+    writeFileSync(
+      join(dir, "bad.js"),
+      'export default { name: "Ping", description: "", run: () => "x" };\n',
+    );
+    writeFileSync(
+      join(dir, "dupe.js"),
+      'export default { name: "ping", description: "again", run: () => "x" };\n',
+    );
+    const { issues, commands } = await validateCommands(dir);
+    expect(commands).toBe(3);
+    const messages = issues.map((i) => i.message);
+    expect(messages.some((m) => m.includes("name must be"))).toBe(true);
+    expect(messages.some((m) => m.includes("description is required"))).toBe(true);
+    expect(messages.some((m) => m.includes("Duplicate command"))).toBe(true);
+
+    const clean = mkdtempSync(join(tmpdir(), "sparkcord-clean-"));
+    writeFileSync(
+      join(clean, "only.js"),
+      'export default { name: "ping", description: "pong", run: () => "pong" };\n',
+    );
+    const ok = await validateCommands(clean);
+    expect(ok.issues).toEqual([]);
+    expect(ok.commands).toBe(1);
+  });
+
+  it("the validate CLI command exits 1 on a bad directory and 0 on a clean one", async () => {
+    const bad = mkdtempSync(join(tmpdir(), "sparkcord-cli-bad-"));
+    writeFileSync(
+      join(bad, "bad.js"),
+      'export default { name: "Nope", description: "", run: () => 1 };\n',
+    );
+    expect(await validateDir(bad, bad)).toBe(1);
+
+    const good = mkdtempSync(join(tmpdir(), "sparkcord-cli-good-"));
+    mkdirSync(join(good, "commands"));
+    writeFileSync(
+      join(good, "commands", "ok.js"),
+      'export default { name: "ping", description: "pong", run: () => "pong" };\n',
+    );
+    expect(await validateDir(undefined, good)).toBe(0);
   });
 });

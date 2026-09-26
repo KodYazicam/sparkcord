@@ -13,6 +13,7 @@ export {
   type InteractionKind,
 } from "./utils/interactions.js";
 export { run as runCli } from "./cli.js";
+export { validateDefinition, validateCommands, type ValidationIssue, type ValidateResult } from "./validate.js";
 export { invokedDirectly } from "./main.js";
 export { packageVersion } from "./version.js";
 export type {
