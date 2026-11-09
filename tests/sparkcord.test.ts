@@ -7,11 +7,12 @@ import { SparkBot } from "../src/client.js";
 import { CommandRegistry } from "../src/handlers/registry.js";
 import { checkCommandAccess } from "../src/utils/permissions.js";
 import { CooldownStore } from "../src/utils/cooldown.js";
-import { parsePrefixArgs, toSlashPayload } from "../src/utils/slash.js";
+import { optionsFromPrefix, optionsFromSlash, parsePrefixArgs, toSlashPayload } from "../src/utils/slash.js";
 import { InteractionRouter, customIdHead, interactionKind } from "../src/utils/interactions.js";
 import { listModules } from "../src/loaders/files.js";
 import { run, validateDir } from "../src/cli.js";
 import { validateDefinition, validateCommands } from "../src/validate.js";
+import { packageVersion } from "../src/version.js";
 import type { CommandDefinition } from "../src/types.js";
 
 const ping: CommandDefinition = {
@@ -36,6 +37,26 @@ describe("registry + slash", () => {
     reg.register({ definition: ping, path: "ping.ts" });
     expect(reg.resolve("p")?.definition.name).toBe("ping");
     expect(toSlashPayload(ping).name).toBe("ping");
+  });
+
+  it("maps slash and prefix options", () => {
+    expect(optionsFromSlash({ options: { data: [{ name: "a", value: 1 }] } })).toEqual({ a: 1 });
+    expect(optionsFromSlash({})).toEqual({});
+    expect(
+      optionsFromPrefix(
+        ["5", "true", "hello"],
+        [
+          { name: "count", description: "count", type: "integer" },
+          { name: "flag", description: "flag", type: "boolean" },
+          { name: "text", description: "text", type: "string" },
+        ],
+      ),
+    ).toEqual({ count: 5, flag: true, text: "hello" });
+  });
+
+  it("reports the package version with a fallback", () => {
+    expect(packageVersion()).toMatch(/^\d+\.\d+\.\d+/);
+    expect(packageVersion("file:///nonexistent/version.js")).toBe("1.0.0");
   });
 });
 
