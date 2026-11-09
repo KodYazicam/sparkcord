@@ -10,6 +10,12 @@ All notable changes to this project are documented here. The format follows
 
 - Issue templates, pull request template, roadmap, and code of conduct.
 - Coverage gate (55% statements) and coverage artifact in CI.
+- Tests for slash/prefix option mapping and package version fallback.
+
+### Security
+
+- Upgraded `vitest` and `@vitest/coverage-v8` to 5.1.0, clearing the dev-only
+  dependency advisories.
 
 ## [1.0.0] - 2026-09-26
 
