@@ -63,5 +63,5 @@ Add a command: new file under `src/commands/` that `export default { name, descr
 
 ## License
 
-Same as sparkcord: **KYAL-1.0** — free to use, attribution required.  
+Same as sparkcord: **Apache-2.0**.
 https://github.com/KodYazicam/sparkcord
