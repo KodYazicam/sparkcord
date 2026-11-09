@@ -10,7 +10,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/discord.js-v14-5865F2?style=flat-square&logo=discord&logoColor=white" alt="discord.js">
   <img src="https://img.shields.io/badge/node-%3E%3D20-339933?style=flat-square" alt="Node">
-  <img src="https://img.shields.io/badge/license-KYAL--1.0-7C3AED?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/license-Apache--2.0-2ea44f?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/author-KodYazicam-0D0D0D?style=flat-square" alt="Author">
 </p>
 
@@ -42,7 +42,7 @@ node dist/cli.js init my-bot
 - [Intents](#intents)
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
-- [License](#license--kyal-10)
+- [License](#license)
 
 ## Requirements
 
@@ -292,16 +292,10 @@ If prefix commands silently do nothing, Message Content is off in the portal.
 
 **Is it on npm?** No. Clone this repo.
 
-## License — KYAL-1.0
+## License
 
-Free to use and modify. **Attribution is mandatory.**
+Apache-2.0. See [LICENSE](./LICENSE).
 
-```
-Author : Batuhan (KodYazicam)
-Project: sparkcord
-Source : https://github.com/KodYazicam/sparkcord
-```
-
-Public bots should credit sparkcord in their README or an `/about` command. See [LICENSE](./LICENSE).
+Commercial use, modification, and distribution are permitted under the Apache License 2.0. Keep the license text with distributed copies.
 
 <p align="center"><sub>Built by <a href="https://github.com/KodYazicam">KodYazicam</a></sub></p>

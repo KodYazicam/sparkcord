@@ -29,7 +29,7 @@ names. Exit code 0 means the directory is ready to run.
 Existing files are never overwritten. If the directory already has a
 package.json, init refuses unless you pass --force.
 
-License: KYAL-1.0 — free to use, attribution required.
+License: Apache-2.0.
 https://github.com/KodYazicam/sparkcord
 `.trim();
 }
