@@ -107,7 +107,12 @@ Start with a **dev guild** (`DEV_GUILD_ID`) so slash commands update in seconds 
 # in your bot, after cloning sparkcord next to it:
 npm install discord.js
 npm install ../sparkcord
+
+# or install straight from git:
+npm install github:KodYazicam/sparkcord
 ```
+
+`dist/` is git-ignored, so installs from a git ref or a local path run the package's `prepare` script: npm installs the devDependencies (`typescript`) and compiles `dist/` before your bot starts. That keeps build output out of git at the cost of a few seconds of build time per install. A published npm release will ship a prebuilt tarball instead.
 
 ```ts
 import { Client, GatewayIntentBits } from "discord.js";
