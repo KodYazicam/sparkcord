@@ -54,6 +54,15 @@ describe("translated READMEs", () => {
     }
   });
 
+  it("keeps the library install snippet identical in every language", () => {
+    const english = fences(read("README.md")).find((block) => block.includes("npm install ../sparkcord"));
+    expect(english, "README.md must document the library install").toBeDefined();
+    for (const file of READMES) {
+      const snippet = fences(read(file)).find((block) => block.includes("npm install ../sparkcord"));
+      expect(snippet, `${file} library install snippet`).toBe(english);
+    }
+  });
+
   it("keeps versions, identifiers and links in sync", () => {
     for (const file of READMES) {
       const text = read(file);
