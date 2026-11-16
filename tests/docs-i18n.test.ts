@@ -1,0 +1,72 @@
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const READMES = ["README.md", "README.tr.md", "README.de.md"] as const;
+
+function read(file: string): string {
+  return readFileSync(join(root, file), "utf8");
+}
+
+function fences(text: string): string[] {
+  return [...text.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)].map((match) => match[1].trim());
+}
+
+describe("translated READMEs", () => {
+  it("ships every translation", () => {
+    for (const file of READMES) {
+      expect(existsSync(join(root, file)), file).toBe(true);
+    }
+  });
+
+  it("links every language from every README", () => {
+    for (const file of READMES) {
+      const text = read(file);
+      for (const target of READMES) {
+        expect(text, `${file} must link ${target}`).toContain(`href="./${target}"`);
+      }
+    }
+  });
+
+  it("marks each translation as non-canonical", () => {
+    for (const file of ["README.tr.md", "README.de.md"]) {
+      const text = read(file);
+      expect(text, file).toMatch(/^> .*README\.md/m);
+      expect(text, file).toMatch(/İngilizce|englischen/);
+    }
+  });
+
+  it("keeps code fences balanced", () => {
+    for (const file of READMES) {
+      const count = (read(file).match(/^```/gm) ?? []).length;
+      expect(count % 2, `${file} has ${count} fence markers`).toBe(0);
+    }
+  });
+
+  it("keeps every command snippet identical to the English source", () => {
+    const english = new Set(fences(read("README.md")));
+    for (const file of ["README.tr.md", "README.de.md"]) {
+      for (const block of fences(read(file))) {
+        expect(english.has(block), `${file} snippet drifted: ${block.split("\n")[0]}`).toBe(true);
+      }
+    }
+  });
+
+  it("keeps versions, identifiers and links in sync", () => {
+    for (const file of READMES) {
+      const text = read(file);
+      expect(text, file).toContain("Node **20+**");
+      expect(text, file).toContain("Node **22.6+**");
+      expect(text, file).toContain("274877975552");
+      expect(text, file).toContain("Apache-2.0");
+      expect(text, file).toContain("./LICENSE");
+    }
+    for (const file of ["README.tr.md", "README.de.md"]) {
+      const text = read(file);
+      expect(text, file).toContain("./CONTRIBUTING.md");
+      expect(text, file).toContain("./SECURITY.md");
+    }
+  });
+});

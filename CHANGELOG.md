@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Turkish (`README.tr.md`) and German (`README.de.md`) READMEs with a language
+  switcher on every page.
 - Issue templates, pull request template, roadmap, and code of conduct.
 - Coverage gate (55% statements) and coverage artifact in CI.
 - Tests for slash/prefix option mapping and package version fallback.
