@@ -27,6 +27,10 @@ All notable changes to this project are documented here. The format follows
 - Commands with `permissions` no longer reject guild owners and roles that hold
   Discord's `Administrator` flag; the flag now satisfies every required
   permission, matching Discord's own semantics.
+- Slash registration sends `default_member_permissions` derived from
+  `command.permissions`, so gated commands are hidden from members who cannot
+  use them. Unknown permission names now fail payload build and
+  `sparkcord validate` instead of registering the command as public.
 
 ## [1.0.0] - 2026-09-26
 
