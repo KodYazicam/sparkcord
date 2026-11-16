@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { SparkBot } from "../src/client.js";
 import { CommandRegistry } from "../src/handlers/registry.js";
-import { checkCommandAccess } from "../src/utils/permissions.js";
+import { checkCommandAccess, isAdministrator } from "../src/utils/permissions.js";
 import { CooldownStore } from "../src/utils/cooldown.js";
 import { optionsFromPrefix, optionsFromSlash, parsePrefixArgs, toSlashPayload } from "../src/utils/slash.js";
 import { InteractionRouter, customIdHead, interactionKind } from "../src/utils/interactions.js";
@@ -71,6 +71,27 @@ describe("permissions + cooldown", () => {
         { userId: "1", inGuild: true, memberPermissions: new Set() },
       ),
     ).toMatch(/BanMembers/);
+  });
+
+  it("lets Administrator satisfy the command permissions", () => {
+    const mod: CommandDefinition = { ...ping, guildOnly: true, permissions: ["ManageMessages", "BanMembers"] };
+    const admin = { userId: "1", inGuild: true, memberPermissions: new Set(["Administrator"]) };
+    expect(checkCommandAccess(mod, admin)).toBeNull();
+    expect(checkCommandAccess(mod, { ...admin, inGuild: false })).toMatch(/server/i);
+    expect(
+      checkCommandAccess({ ...ping, ownerOnly: true, permissions: ["ManageMessages"] }, admin, []),
+    ).toMatch(/owner/i);
+    expect(
+      checkCommandAccess(mod, { ...admin, memberPermissions: new Set(["ManageMessages"]) }),
+    ).toMatch(/BanMembers/);
+  });
+
+  it("detects the Administrator flag in any capitalisation", () => {
+    expect(isAdministrator(new Set(["Administrator"]))).toBe(true);
+    expect(isAdministrator(new Set(["ADMINISTRATOR", "SendMessages"]))).toBe(true);
+    expect(isAdministrator(new Set(["ManageGuild", "SendMessages"]))).toBe(false);
+    expect(isAdministrator(new Set())).toBe(false);
+    expect(isAdministrator(undefined)).toBe(false);
   });
 
   it("tracks cooldown windows", () => {

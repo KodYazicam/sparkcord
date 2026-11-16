@@ -13,6 +13,7 @@ All notable changes to this project are documented here. The format follows
 - Issue templates, pull request template, roadmap, and code of conduct.
 - Coverage gate (55% statements) and coverage artifact in CI.
 - Tests for slash/prefix option mapping and package version fallback.
+- `isAdministrator` exported from the package root for downstream permission checks.
 
 ### Security
 
@@ -23,6 +24,9 @@ All notable changes to this project are documented here. The format follows
 
 - Turkish and German READMEs now document the `github:` install path and the
   `prepare` build, keeping the translated library snippet in sync with English.
+- Commands with `permissions` no longer reject guild owners and roles that hold
+  Discord's `Administrator` flag; the flag now satisfies every required
+  permission, matching Discord's own semantics.
 
 ## [1.0.0] - 2026-09-26
 
