@@ -19,6 +19,11 @@ All notable changes to this project are documented here. The format follows
 - Upgraded `vitest` and `@vitest/coverage-v8` to 5.1.0, clearing the dev-only
   dependency advisories.
 
+### Fixed
+
+- Turkish and German READMEs now document the `github:` install path and the
+  `prepare` build, keeping the translated library snippet in sync with English.
+
 ## [1.0.0] - 2026-09-26
 
 ### Added

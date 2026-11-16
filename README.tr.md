@@ -68,7 +68,12 @@ Bu bit alanı View Channel + Send Messages + Embed Links + Read Message History 
 # in your bot, after cloning sparkcord next to it:
 npm install discord.js
 npm install ../sparkcord
+
+# or install straight from git:
+npm install github:KodYazicam/sparkcord
 ```
+
+`dist/` sürüm kontrolünde tutulmaz; bu yüzden bir git ref'inden veya yerel yoldan kurulumlar paketin `prepare` betiğini çalıştırır: npm geliştirme bağımlılıklarını (`typescript`) kurar ve botunuz başlamadan önce `dist/` klasörünü derler. Bu, derleme çıktısını git dışında tutar; karşılığında kurulum başına birkaç saniye derleme süresi ekler. npm'de yayınlanan bir sürüm önceden derlenmiş tarball taşıyacaktır.
 
 Tam `createSparkBot({ client, commandsDir, eventsDir, prefix, owners, devGuildId })` örneği ve `commandsDir` yol kuralları İngilizce [README](./README.md#install-as-a-library) dosyasındadır. `commandsDir` / `eventsDir` **dosya sistemi yolları** olmalıdır, `file://` URL'si değil.
 

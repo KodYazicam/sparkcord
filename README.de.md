@@ -68,7 +68,12 @@ Dieses Bitfeld umfasst View Channel + Send Messages + Embed Links + Read Message
 # in your bot, after cloning sparkcord next to it:
 npm install discord.js
 npm install ../sparkcord
+
+# or install straight from git:
+npm install github:KodYazicam/sparkcord
 ```
+
+`dist/` ist in Git ignoriert. Installationen aus einem Git-Ref oder einem lokalen Pfad führen daher das `prepare`-Skript des Pakets aus: npm installiert die Dev-Abhängigkeit (`typescript`) und kompiliert `dist/`, bevor Ihr Bot startet. Das hält Build-Ausgaben aus Git und kostet pro Installation einige Sekunden Build-Zeit. Eine veröffentlichte npm-Version wird stattdessen ein vorgebautes Tarball ausliefern.
 
 Das vollständige `createSparkBot({ client, commandsDir, eventsDir, prefix, owners, devGuildId })`-Beispiel und die Pfadregeln stehen in der englischen [README](./README.md#install-as-a-library). `commandsDir` / `eventsDir` müssen **Dateisystempfade** sein, keine `file://`-URLs.
 
