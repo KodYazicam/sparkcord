@@ -14,6 +14,13 @@
   <img src="https://img.shields.io/badge/author-KodYazicam-0D0D0D?style=flat-square" alt="Author">
 </p>
 
+<p align="center">
+  <strong>Read this README in your language</strong><br/>
+  <a href="./README.md">English</a> ·
+  <a href="./README.tr.md">Türkçe</a> ·
+  <a href="./README.de.md">Deutsch</a>
+</p>
+
 ---
 
 sparkcord is a thin layer on top of Discord.js. You write command modules. The framework loads them, registers slash commands, and routes both `/ping` and `!ping`.
