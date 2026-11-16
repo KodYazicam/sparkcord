@@ -239,6 +239,13 @@ Checked in this order:
 3. `permissions` (guild only; names like `BanMembers`, `ManageMessages`)
 4. cooldown (`command:userId`)
 
+`Administrator` satisfies every entry in `permissions`, matching Discord's own
+rule that the flag implies all guild permissions. discord.js reports exactly
+that flag for a guild owner, so owners and full-admin roles are not rejected
+by moderation commands. `Administrator` does **not** satisfy `ownerOnly` and
+does **not** make a guild-only command usable in DMs; import `isAdministrator`
+from `sparkcord` when you need the same test in your own code.
+
 ## Slash registration
 
 On `ready` (or immediately if already ready), if `autoRegister` is not `false`, sparkcord calls `application.commands.set(payload, devGuildId?)`.

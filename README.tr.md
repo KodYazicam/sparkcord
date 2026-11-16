@@ -119,6 +119,8 @@ Prefix argümanları `command.options` üzerine **sırayla** eşlenir (`!ban 123
 3. `permissions` (yalnızca sunucuda; `BanMembers`, `ManageMessages` gibi adlar)
 4. bekleme süresi (`command:userId`)
 
+`Administrator` izni `permissions` listesindeki her girdiyi karşılar; Discord'un kendi kuralı da budur. discord.js sunucu sahibi için tam olarak bu bayrağı bildirdiğinden sahipler ve tam yetkili roller moderasyon komutlarında reddedilmez. `Administrator` `ownerOnly` şartını **karşılamaz** ve yalnızca sunucuda çalışan bir komutu DM'de kullanılabilir yapmaz; aynı denetimi kendi kodunuzda yapmak için `isAdministrator` fonksiyonunu `sparkcord` paketinden içe aktarın.
+
 Reddedilen çağrılar `run` fonksiyonunu **çalıştırmaz**. `denyReplies: true` (varsayılan) iken sparkcord slash için ephemeral, prefix için kanal yanıtı gönderir. Depo 500 anahtarı geçtiğinde süresi dolmuş bekleme kayıtlarını temizler.
 
 ## Intent'ler

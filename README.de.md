@@ -119,6 +119,8 @@ Prüfreihenfolge:
 3. `permissions` (nur in Guilds; Namen wie `BanMembers`, `ManageMessages`)
 4. Cooldown (`command:userId`)
 
+`Administrator` erfüllt jeden Eintrag in `permissions` — das ist Discords eigene Regel. discord.js meldet für den Serverinhaber genau dieses Flag, daher werden Inhaber und vollberechtigte Rollen bei Moderationsbefehlen nicht abgelehnt. `Administrator` erfüllt `ownerOnly` **nicht** und macht einen Guild-only-Befehl nicht in DMs nutzbar; importiere `isAdministrator` aus `sparkcord`, wenn du dieselbe Prüfung in eigenem Code brauchst.
+
 Abgelehnte Aufrufe führen `run` **nicht** aus. Mit `denyReplies: true` (Standard) sendet sparkcord eine ephemere Antwort für Slash und eine Kanalantwort für Prefix. Der Store entfernt abgelaufene Cooldowns, sobald er 500 Schlüssel überschreitet.
 
 ## Intents

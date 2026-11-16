@@ -6,6 +6,19 @@ export interface PermissionContext {
   memberPermissions?: Set<string>;
 }
 
+/**
+ * Discord's ADMINISTRATOR bit implies every other guild permission and
+ * bypasses channel overwrites. discord.js reports exactly that flag for a
+ * guild owner, so the check must be case-insensitive and explicit.
+ */
+export function isAdministrator(permissions?: Set<string>): boolean {
+  if (!permissions) return false;
+  for (const name of permissions) {
+    if (name.toLowerCase() === "administrator") return true;
+  }
+  return false;
+}
+
 export function checkCommandAccess(
   command: CommandDefinition,
   ctx: PermissionContext,
@@ -19,7 +32,8 @@ export function checkCommandAccess(
   }
   if (command.permissions?.length) {
     if (!ctx.inGuild) return "This command can only be used in a server.";
-    const missing = command.permissions.filter((p) => !ctx.memberPermissions?.has(p));
+    const admin = isAdministrator(ctx.memberPermissions);
+    const missing = command.permissions.filter((p) => !admin && !ctx.memberPermissions?.has(p));
     if (missing.length) return `Missing permission: ${missing.join(", ")}`;
   }
   return null;
