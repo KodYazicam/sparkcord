@@ -1,4 +1,5 @@
 import type { CommandDefinition, CommandOption } from "../types.js";
+import { defaultMemberPermissions } from "./discord-permissions.js";
 
 const TYPE_MAP: Record<NonNullable<CommandOption["type"]>, number> = {
   string: 3,
@@ -11,7 +12,7 @@ const TYPE_MAP: Record<NonNullable<CommandOption["type"]>, number> = {
 };
 
 export function toSlashPayload(command: CommandDefinition): Record<string, unknown> {
-  return {
+  const payload: Record<string, unknown> = {
     name: command.name,
     description: command.description,
     options: (command.options ?? []).map((option) => ({
@@ -22,6 +23,11 @@ export function toSlashPayload(command: CommandDefinition): Record<string, unkno
       choices: option.choices,
     })),
   };
+  const gated = defaultMemberPermissions(command);
+  if (gated !== undefined) {
+    payload.default_member_permissions = gated;
+  }
+  return payload;
 }
 
 export function parsePrefixArgs(content: string, prefix: string): { name: string; args: string[] } | null {

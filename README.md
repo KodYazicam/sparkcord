@@ -255,6 +255,8 @@ On `ready` (or immediately if already ready), if `autoRegister` is not `false`, 
 
 Payload is built from `toSlashPayload`. You can also call `bot.registerSlash(client)` yourself after ready.
 
+When a command declares `permissions`, the payload also sets `default_member_permissions` to the OR of those Discord flags. Discord then hides the command from members who cannot use it, while `Administrator` still sees it (matching the runtime check). Commands without `permissions` stay public. An unknown permission name throws during payload build and is reported by `sparkcord validate`, so a typo cannot silently register a gated command as public.
+
 ## CLI
 
 ```bash
@@ -273,7 +275,7 @@ node dist/cli.js validate src/commands
 # validate  6 command(s) OK in /home/me/bot/src/commands
 ```
 
-Checks: `name` is 1-32 chars of `[a-z0-9_-]`, `description` is 1-100 chars, `kind` / `cooldown` / `guildOnly` / `ownerOnly` / `aliases` / `options` types, option names and `type` values, choice shapes, duplicate names and aliases, and module import failures. With no `dir` argument it tries `src/commands` then `commands`. Exit `0` = ready to run, `1` = issues (each printed as `error <file>: <message>`). Works in CI: run it before deploying, after pulling, or in a pre-push hook.
+Checks: `name` is 1-32 chars of `[a-z0-9_-]`, `description` is 1-100 chars, `kind` / `cooldown` / `guildOnly` / `ownerOnly` / `aliases` / `options` types, option names and `type` values, choice shapes, permission names, duplicate names and aliases, and module import failures. With no `dir` argument it tries `src/commands` then `commands`. Exit `0` = ready to run, `1` = issues (each printed as `error <file>: <message>`). Works in CI: run it before deploying, after pulling, or in a pre-push hook.
 
 ## Intents
 

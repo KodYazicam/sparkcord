@@ -9,6 +9,8 @@ import { checkCommandAccess, isAdministrator } from "../src/utils/permissions.js
 import { CooldownStore } from "../src/utils/cooldown.js";
 import { optionsFromPrefix, optionsFromSlash, parsePrefixArgs, toSlashPayload } from "../src/utils/slash.js";
 import { InteractionRouter, customIdHead, interactionKind } from "../src/utils/interactions.js";
+import { PERMISSION_BITS } from "../src/utils/discord-permissions.js";
+import { PermissionFlagsBits } from "discord.js";
 import { listModules } from "../src/loaders/files.js";
 import { run, validateDir } from "../src/cli.js";
 import { validateDefinition, validateCommands } from "../src/validate.js";
@@ -98,6 +100,49 @@ describe("permissions + cooldown", () => {
     const store = new CooldownStore();
     expect(store.remaining("ping:1", 5, 1000)).toBe(0);
     expect(store.remaining("ping:1", 5, 2000)).toBeGreaterThan(0);
+  });
+});
+
+describe("slash permission visibility", () => {
+  const gated: CommandDefinition = { ...ping, permissions: ["BanMembers", "ManageMessages"] };
+
+  it("sends default_member_permissions for gated commands", () => {
+    expect(toSlashPayload(gated).default_member_permissions).toBe("8196");
+    expect(toSlashPayload({ ...ping, permissions: ["Administrator"] }).default_member_permissions).toBe("8");
+  });
+
+  it("omits the field when no permissions are declared", () => {
+    expect(toSlashPayload(ping)).not.toHaveProperty("default_member_permissions");
+    expect(toSlashPayload({ ...ping, permissions: [] })).not.toHaveProperty("default_member_permissions");
+  });
+
+  it("matches names case-insensitively and ORs duplicates", () => {
+    expect(
+      toSlashPayload({ ...ping, permissions: ["banmembers", "BANMEMBERS", "ManageMessages"] })
+        .default_member_permissions,
+    ).toBe("8196");
+  });
+
+  it("throws on an unknown permission instead of registering a public command", () => {
+    expect(() => toSlashPayload({ ...ping, permissions: ["BanMember"] })).toThrow(/BanMember/);
+  });
+
+  it("carries the field through SparkBot.slashPayload", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-"));
+    const bot = new SparkBot({ commandsDir: dir, prefix: "!" });
+    bot.commands.register({ definition: gated, path: "gated.ts" });
+    expect(bot.slashPayload()).toEqual([
+      expect.objectContaining({ name: "ping", default_member_permissions: "8196" }),
+    ]);
+  });
+
+  it("keeps every mapped flag in sync with discord.js", () => {
+    for (const [name, bits] of Object.entries(PERMISSION_BITS)) {
+      expect({ name, bits }).toEqual({
+        name,
+        bits: PermissionFlagsBits[name as keyof typeof PermissionFlagsBits],
+      });
+    }
   });
 });
 
@@ -255,6 +300,14 @@ describe("validate", () => {
     expect(messages.some((m) => m.includes("lowercase"))).toBe(true);
     expect(messages.some((m) => m.includes("unknown type"))).toBe(true);
     expect(validateDefinition(ping, "ping.js")).toEqual([]);
+  });
+
+  it("flags unknown Discord permission names", () => {
+    const messages = validateDefinition(
+      { ...ping, permissions: ["BanMembers", "BanMember"] },
+      "ban.js",
+    ).map((i) => i.message);
+    expect(messages.some((m) => m.includes("BanMember"))).toBe(true);
   });
 
   it("loads a real directory, catches duplicates, and counts commands", async () => {

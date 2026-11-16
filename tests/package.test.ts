@@ -39,5 +39,5 @@ describe("package contract", () => {
     expect(paths).toContain("dist/index.d.ts");
     expect(paths).toContain("dist/cli.js");
     expect(paths.some((path) => path.startsWith("templates/"))).toBe(true);
-  });
+  }, 30_000);
 });

@@ -121,6 +121,8 @@ Prüfreihenfolge:
 
 `Administrator` erfüllt jeden Eintrag in `permissions` — das ist Discords eigene Regel. discord.js meldet für den Serverinhaber genau dieses Flag, daher werden Inhaber und vollberechtigte Rollen bei Moderationsbefehlen nicht abgelehnt. `Administrator` erfüllt `ownerOnly` **nicht** und macht einen Guild-only-Befehl nicht in DMs nutzbar; importiere `isAdministrator` aus `sparkcord`, wenn du dieselbe Prüfung in eigenem Code brauchst.
 
+Bei Commands mit `permissions` setzt `toSlashPayload` zusätzlich `default_member_permissions` auf die OR-Verknüpfung dieser Discord-Flags. Discord blendet den Befehl dann für Mitglieder ohne die Berechtigung aus; `Administrator` sieht ihn weiterhin. Ein unbekannter Berechtigungsname löst beim Erzeugen des Payloads einen Fehler aus und wird von `sparkcord validate` gemeldet.
+
 Abgelehnte Aufrufe führen `run` **nicht** aus. Mit `denyReplies: true` (Standard) sendet sparkcord eine ephemere Antwort für Slash und eine Kanalantwort für Prefix. Der Store entfernt abgelaufene Cooldowns, sobald er 500 Schlüssel überschreitet.
 
 ## Intents

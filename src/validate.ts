@@ -1,5 +1,6 @@
 import { loadCommands } from "./loaders/files.js";
 import { CommandRegistry } from "./handlers/registry.js";
+import { isKnownPermission } from "./utils/discord-permissions.js";
 import type { CommandDefinition, CommandOption } from "./types.js";
 
 export interface ValidationIssue {
@@ -67,6 +68,15 @@ export function validateDefinition(definition: CommandDefinition, path: string):
   }
   if (definition.permissions !== undefined && !Array.isArray(definition.permissions)) {
     issues.push({ path, message: "permissions must be an array of permission names" });
+  } else if (Array.isArray(definition.permissions)) {
+    for (const name of definition.permissions) {
+      if (typeof name !== "string" || !isKnownPermission(name)) {
+        issues.push({
+          path,
+          message: `unknown Discord permission ${JSON.stringify(name)} in permissions`,
+        });
+      }
+    }
   }
   for (const alias of definition.aliases ?? []) {
     if (typeof alias !== "string" || !alias || alias !== alias.toLowerCase()) {
