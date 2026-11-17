@@ -294,6 +294,81 @@ describe("SparkBot invoke", () => {
   });
 });
 
+describe("command failure logging", () => {
+  const boom: CommandDefinition = {
+    name: "boom",
+    description: "always throws",
+    run: () => {
+      throw new Error("boom exploded");
+    },
+  };
+
+  async function captureErrors<T>(fn: () => Promise<T>): Promise<{ result: T; lines: string[] }> {
+    const original = console.error;
+    const lines: string[] = [];
+    console.error = (...args: unknown[]) => {
+      lines.push(args.map((arg) => String(arg)).join(" "));
+    };
+    try {
+      return { result: await fn(), lines };
+    } finally {
+      console.error = original;
+    }
+  }
+
+  it("logs a prefix command failure with the command name", async () => {
+    const bot = new SparkBot({
+      commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")),
+      prefix: "!",
+      denyReplies: false,
+    });
+    bot.commands.register({ definition: boom, path: "boom.ts" });
+
+    const { result, lines } = await captureErrors(() =>
+      bot.handleMessage({
+        author: { bot: false, id: "u3" },
+        content: "!boom",
+        guildId: "g",
+        member: { permissions: { toArray: () => [] } },
+      }),
+    );
+
+    expect(result).toEqual({ ok: false, reason: "boom exploded" });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain("[sparkcord]");
+    expect(lines[0]).toContain("command boom failed");
+    expect(lines[0]).toContain("boom exploded");
+  });
+
+  it("logs a slash command failure and still replies generically", async () => {
+    const bot = new SparkBot({
+      commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")),
+      denyReplies: true,
+    });
+    bot.commands.register({ definition: boom, path: "boom.ts" });
+    const replies: unknown[] = [];
+
+    const { result, lines } = await captureErrors(() =>
+      bot.handleInteraction({
+        isChatInputCommand: () => true,
+        commandName: "boom",
+        user: { id: "u4" },
+        guildId: "g",
+        member: { permissions: { toArray: () => [] } },
+        options: { data: [] },
+        reply: async (payload: unknown) => {
+          replies.push(payload);
+        },
+      }),
+    );
+
+    expect(result).toEqual({ ok: false, reason: "boom exploded" });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain("command boom failed");
+    expect(replies).toEqual([{ content: "Command failed. Check the bot logs.", ephemeral: true }]);
+  });
+});
+
 describe("file listing + cli", () => {
   it("lists command modules and prints help", () => {
     const dir = mkdtempSync(join(tmpdir(), "sparkcord-mod-"));

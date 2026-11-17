@@ -147,6 +147,7 @@ Wenn Prefix-Befehle stillschweigend nichts tun, ist Message Content im Portal de
 | Starter scheitert unter Node 20 | Node 22.6+ verwenden oder `tsx` ergänzen. Die Bibliothek unterstützt Node 20 weiterhin mit `.js`-Dateien. |
 | `Cannot import TypeScript command` | Kompilieren oder mit `--experimental-strip-types` starten. |
 | `refusing to overwrite` | Das Verzeichnis enthält bereits eine `package.json`. `--force` nutzen oder ein anderes Verzeichnis wählen. |
+| Befehl schlägt fehl, Log leer | Fehlgeschlagene Befehle protokollieren `[sparkcord] command <name> failed (<kind>):`; fehlt die Zeile, sparkcord aktualisieren. |
 
 ## Beitragen, Sicherheit und Lizenz
 
