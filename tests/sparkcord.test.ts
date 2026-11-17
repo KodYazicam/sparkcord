@@ -15,7 +15,7 @@ import { listModules } from "../src/loaders/files.js";
 import { run, validateDir } from "../src/cli.js";
 import { validateDefinition, validateCommands } from "../src/validate.js";
 import { packageVersion } from "../src/version.js";
-import type { CommandDefinition } from "../src/types.js";
+import type { CommandDefinition, LoadedEvent } from "../src/types.js";
 
 const ping: CommandDefinition = {
   name: "ping",
@@ -86,6 +86,42 @@ describe("permissions + cooldown", () => {
     expect(
       checkCommandAccess(mod, { ...admin, memberPermissions: new Set(["ManageMessages"]) }),
     ).toMatch(/BanMembers/);
+  });
+
+  it("matches declared permissions case-insensitively and by bit", () => {
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["banmembers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["BanMembers"]) },
+      ),
+    ).toBeNull();
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["ManageEmojisAndStickers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["ManageGuildExpressions"]) },
+      ),
+    ).toBeNull();
+  });
+
+  it("still denies a missing or unknown permission", () => {
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["banmembers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["SendMessages"]) },
+      ),
+    ).toMatch(/banmembers/);
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["FuturePermission"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["SendMessages"]) },
+      ),
+    ).toMatch(/FuturePermission/);
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["futurepermission"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["FuturePermission"]) },
+      ),
+    ).toBeNull();
   });
 
   it("detects the Administrator flag in any capitalisation", () => {
@@ -393,5 +429,191 @@ describe("validate", () => {
       'export default { name: "ping", description: "pong", run: () => "pong" };\n',
     );
     expect(await validateDir(undefined, good)).toBe(0);
+  });
+});
+
+describe("handler error containment", () => {
+  const boom = {
+    customId: "boom",
+    run: () => {
+      throw new Error("handler exploded");
+    },
+  };
+
+  async function captureErrors<T>(fn: () => Promise<T>): Promise<T> {
+    const original = console.error;
+    console.error = () => undefined;
+    try {
+      return await fn();
+    } finally {
+      console.error = original;
+    }
+  }
+
+  it("returns ok:false when a component handler throws", async () => {
+    const bot = new SparkBot({ commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")), autoRegister: false });
+    bot.interactions.onComponent(boom);
+    const result = await captureErrors(() =>
+      bot.handleInteraction({ isButton: () => true, customId: "boom_42", user: { id: "u1" } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("handler exploded");
+  });
+
+  it("returns ok:false when an autocomplete handler throws", async () => {
+    const bot = new SparkBot({ commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")), autoRegister: false });
+    bot.interactions.onAutocomplete({
+      command: "search",
+      run: () => {
+        throw new Error("autocomplete exploded");
+      },
+    });
+    const result = await captureErrors(() =>
+      bot.handleInteraction({ isAutocomplete: () => true, commandName: "search", user: { id: "u1" } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("autocomplete exploded");
+  });
+
+  it("keeps a handler failure in a gateway listener off the unhandled-rejection path", async () => {
+    const bot = new SparkBot({ commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")), autoRegister: false });
+    bot.interactions.onComponent(boom);
+    const listeners: Record<string, Array<(arg: unknown) => unknown>> = {};
+    const client = {
+      user: null,
+      on: (event: string, fn: (arg: unknown) => unknown) => {
+        (listeners[event] ??= []).push(fn);
+        return client;
+      },
+      once: () => client,
+    };
+    bot.attach(client);
+
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => {
+      unhandled.push(reason);
+    };
+    const original = console.error;
+    console.error = () => undefined;
+    process.on("unhandledRejection", onUnhandled);
+    try {
+      listeners.interactionCreate[0]({ isButton: () => true, customId: "boom_1", user: { id: "u1" } });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+      console.error = original;
+    }
+    expect(unhandled).toEqual([]);
+  });
+});
+
+describe("event error containment", () => {
+  function attachEvents(events: LoadedEvent[]) {
+    const bot = new SparkBot({
+      commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")),
+      autoRegister: false,
+    });
+    bot.events = events;
+    const registered: Array<{ mode: string; name: string; listener: (...args: unknown[]) => unknown }> = [];
+    const client = {
+      user: null,
+      on: (name: string, listener: (...args: unknown[]) => unknown) => {
+        registered.push({ mode: "on", name, listener });
+        return client;
+      },
+      once: (name: string, listener: (...args: unknown[]) => unknown) => {
+        registered.push({ mode: "once", name, listener });
+        return client;
+      },
+    };
+    bot.attach(client);
+    return { bot, registered };
+  }
+
+  function captureErrors<T>(fn: () => T): { result: T; logs: string[] } {
+    const original = console.error;
+    const logs: string[] = [];
+    console.error = (...args: unknown[]) => {
+      logs.push(args.map((arg) => (arg instanceof Error ? arg.message : String(arg))).join(" "));
+    };
+    try {
+      return { result: fn(), logs };
+    } finally {
+      console.error = original;
+    }
+  }
+
+  const syncBoom: LoadedEvent = {
+    path: "boom.ts",
+    definition: {
+      name: "boom",
+      run: () => {
+        throw new Error("event exploded");
+      },
+    },
+  };
+
+  const asyncBoom: LoadedEvent = {
+    path: "async-boom.ts",
+    definition: {
+      name: "asyncBoom",
+      once: true,
+      run: async () => {
+        throw new Error("async event exploded");
+      },
+    },
+  };
+
+  it("contains a synchronous throw from an event handler", () => {
+    const { registered } = attachEvents([syncBoom]);
+    const registration = registered.find((entry) => entry.name === "boom");
+    expect(registration?.mode).toBe("on");
+
+    const { logs } = captureErrors(() => {
+      expect(() => registration?.listener()).not.toThrow();
+      return null;
+    });
+
+    expect(logs.some((line) => line.includes("event boom failed"))).toBe(true);
+    expect(logs.some((line) => line.includes("event exploded"))).toBe(true);
+  });
+
+  it("contains a rejected promise from an async event handler", async () => {
+    const { registered } = attachEvents([asyncBoom]);
+    const registration = registered.find((entry) => entry.name === "asyncBoom");
+    expect(registration?.mode).toBe("once");
+
+    const original = console.error;
+    const logs: string[] = [];
+    console.error = (...args: unknown[]) => {
+      logs.push(args.map((arg) => (arg instanceof Error ? arg.message : String(arg))).join(" "));
+    };
+    try {
+      await expect(Promise.resolve(registration?.listener())).resolves.toBeUndefined();
+    } finally {
+      console.error = original;
+    }
+
+    expect(logs.some((line) => line.includes("event asyncBoom failed"))).toBe(true);
+    expect(logs.some((line) => line.includes("async event exploded"))).toBe(true);
+  });
+
+  it("forwards the bot context and arguments and keeps successful return values", () => {
+    let seen: unknown[] = [];
+    const ok: LoadedEvent = {
+      path: "ok.ts",
+      definition: {
+        name: "ok",
+        run: (ctx, ...args) => {
+          seen = [ctx, ...args];
+          return "done";
+        },
+      },
+    };
+    const { bot, registered } = attachEvents([ok]);
+    const registration = registered.find((entry) => entry.name === "ok");
+    expect(registration?.listener("a", 1)).toBe("done");
+    expect(seen[0]).toEqual({ bot, client: expect.anything() });
+    expect(seen.slice(1)).toEqual(["a", 1]);
   });
 });

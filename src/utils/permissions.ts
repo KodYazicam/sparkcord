@@ -1,4 +1,5 @@
 import type { CommandDefinition } from "../types.js";
+import { permissionBits } from "./discord-permissions.js";
 
 export interface PermissionContext {
   userId: string;
@@ -19,6 +20,34 @@ export function isAdministrator(permissions?: Set<string>): boolean {
   return false;
 }
 
+/** OR of every permission name the member holds that sparkcord can resolve. */
+function memberBits(permissions?: Set<string>): bigint {
+  let bits = 0n;
+  if (!permissions) return bits;
+  for (const name of permissions) {
+    const value = permissionBits(name);
+    if (value !== undefined) bits |= value;
+  }
+  return bits;
+}
+
+/**
+ * Runtime counterpart of `toPermissionBitfield`: resolve both sides through the
+ * same case-insensitive, alias-aware table so a name that validated and
+ * registered cannot deny the member who actually holds that bit.
+ */
+function grants(permission: string, permissions: Set<string> | undefined, bits: bigint): boolean {
+  const value = permissionBits(permission);
+  if (value !== undefined) return (bits & value) !== 0n;
+  // Not in the table (a future flag): stay fail-closed, but match the name
+  // case-insensitively like the rest of the permission API.
+  const wanted = permission.toLowerCase();
+  for (const name of permissions ?? []) {
+    if (name.toLowerCase() === wanted) return true;
+  }
+  return false;
+}
+
 export function checkCommandAccess(
   command: CommandDefinition,
   ctx: PermissionContext,
@@ -33,7 +62,8 @@ export function checkCommandAccess(
   if (command.permissions?.length) {
     if (!ctx.inGuild) return "This command can only be used in a server.";
     const admin = isAdministrator(ctx.memberPermissions);
-    const missing = command.permissions.filter((p) => !admin && !ctx.memberPermissions?.has(p));
+    const bits = memberBits(ctx.memberPermissions);
+    const missing = command.permissions.filter((p) => !admin && !grants(p, ctx.memberPermissions, bits));
     if (missing.length) return `Missing permission: ${missing.join(", ")}`;
   }
   return null;

@@ -82,17 +82,33 @@ export class SparkBot {
     };
     client.once("ready", onReady);
     if (client.user) void onReady();
+    const reportFailure = (label: string) => (error: unknown) => {
+      console.error(`[sparkcord] ${label} failed:`, error);
+    };
     client.on("interactionCreate", (interaction) => {
-      void this.handleInteraction(interaction);
+      void this.handleInteraction(interaction).catch(reportFailure("interactionCreate"));
     });
     client.on("messageCreate", (message) => {
-      void this.handleMessage(message);
+      void this.handleMessage(message).catch(reportFailure("messageCreate"));
     });
     for (const event of this.events) {
       const method = event.definition.once ? "once" : "on";
-      client[method](event.definition.name, (...args: unknown[]) =>
-        event.definition.run({ bot: this, client }, ...args),
-      );
+      const name = event.definition.name;
+      client[method](name, (...args: unknown[]) => {
+        const fail = (error: unknown) => {
+          console.error(`[sparkcord] event ${name} failed:`, error);
+        };
+        try {
+          const result = event.definition.run({ bot: this, client }, ...args);
+          if (result && typeof (result as Promise<unknown>).then === "function") {
+            return (result as Promise<unknown>).catch(fail);
+          }
+          return result;
+        } catch (error) {
+          fail(error);
+          return undefined;
+        }
+      });
     }
     return this;
   }
@@ -107,7 +123,15 @@ export class SparkBot {
     };
     const kind = interactionKind(interaction);
     if (kind === "button" || kind === "select" || kind === "modal" || kind === "autocomplete") {
-      return this.interactions.dispatch(interaction, this);
+      try {
+        return await this.interactions.dispatch(interaction, this);
+      } catch (error) {
+        const message = (error as Error)?.message || "interaction-error";
+        const target = interaction as { customId?: string; commandName?: string };
+        const id = target.customId ?? target.commandName ?? "unknown";
+        console.error(`[sparkcord] ${kind} ${id} failed:`, error);
+        return { ok: false, reason: message };
+      }
     }
     if (typeof ix.isChatInputCommand === "function" && !ix.isChatInputCommand()) {
       return { ok: false, reason: "not-slash" };

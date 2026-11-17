@@ -25,6 +25,15 @@ All notable changes to this project are documented here. The format follows
 - Colocated test modules no longer abort startup: the loader skips
   `*.test.js|mjs|cjs|ts` and `*.spec.js|mjs|cjs|ts` alongside `*.d.ts`, so a
   JavaScript bot with tests next to its commands boots again.
+- An error thrown by a button, select menu, modal or autocomplete handler no
+  longer escapes as an unhandled rejection from the `interactionCreate`
+  listener; it is logged with the interaction kind and id and returned as
+  `{ ok: false, reason }`. The `interactionCreate` and `messageCreate`
+  listeners also catch unexpected failures instead of terminating the process.
+- An error thrown or rejected by a file-based event handler no longer escapes
+  `client.on`/`client.once` as an unhandled rejection. `SparkBot.attach` logs
+  `[sparkcord] event <name> failed: …` and the listener returns normally, so a
+  single broken module in `eventsDir` cannot terminate the process.
 - Turkish and German READMEs now document the `github:` install path and the
   `prepare` build, keeping the translated library snippet in sync with English.
 - Commands with `permissions` no longer reject guild owners and roles that hold
@@ -34,6 +43,10 @@ All notable changes to this project are documented here. The format follows
   `command.permissions`, so gated commands are hidden from members who cannot
   use them. Unknown permission names now fail payload build and
   `sparkcord validate` instead of registering the command as public.
+- Runtime permission checks resolve names case-insensitively and by Discord
+  bit, so `banmembers` matches `BanMembers` and aliases such as
+  `ManageEmojisAndStickers` match `ManageGuildExpressions` instead of denying
+  the member who holds the permission.
 
 ## [1.0.0] - 2026-09-26
 
