@@ -209,6 +209,8 @@ export default {
 
 `once: true` uses `client.once`. Extra Discord arguments are forwarded after `ctx`.
 
+An event handler may throw or reject; sparkcord contains it. The listener logs `[sparkcord] event <name> failed: …` and returns normally, so one broken event module cannot become an unhandled rejection that terminates the process.
+
 Button / select / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
 
 ## Command context

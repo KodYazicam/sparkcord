@@ -22,6 +22,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- An error thrown or rejected by a file-based event handler no longer escapes
+  `client.on`/`client.once` as an unhandled rejection. `SparkBot.attach` logs
+  `[sparkcord] event <name> failed: …` and the listener returns normally, so a
+  single broken module in `eventsDir` cannot terminate the process.
 - Turkish and German READMEs now document the `github:` install path and the
   `prepare` build, keeping the translated library snippet in sync with English.
 - Commands with `permissions` no longer reject guild owners and roles that hold
