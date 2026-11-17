@@ -22,6 +22,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Colocated test modules no longer abort startup: the loader skips
+  `*.test.js|mjs|cjs|ts` and `*.spec.js|mjs|cjs|ts` alongside `*.d.ts`, so a
+  JavaScript bot with tests next to its commands boots again.
 - Turkish and German READMEs now document the `github:` install path and the
   `prepare` build, keeping the translated library snippet in sync with English.
 - Commands with `permissions` no longer reject guild owners and roles that hold

@@ -152,7 +152,7 @@ On Node 20, command files must be `.js` (or you must run with a TypeScript loade
 
 ## Command modules
 
-One default export per file. Nested folders are loaded. Files named `*.test.ts`, `*.spec.ts`, or `*.d.ts` are skipped.
+One default export per file. Nested folders are loaded. Colocated tests and declarations are skipped: `*.test.js`, `*.test.mjs`, `*.test.cjs`, `*.test.ts`, the matching `*.spec.*` forms, and `*.d.ts`. A command named `latest.js` or `contest.js` still loads.
 
 ```ts
 import type { CommandDefinition } from "sparkcord";

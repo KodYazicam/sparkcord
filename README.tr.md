@@ -79,7 +79,7 @@ Tam `createSparkBot({ client, commandsDir, eventsDir, prefix, owners, devGuildId
 
 ## Komut modülleri
 
-Her dosyada tek bir varsayılan dışa aktarım bulunur. Alt klasörler yüklenir. `*.test.ts`, `*.spec.ts` ve `*.d.ts` dosyaları atlanır.
+Her dosyada tek bir varsayılan dışa aktarım bulunur. Alt klasörler yüklenir. Yanında duran testler ve tip bildirimleri atlanır: `*.test.js`, `*.test.mjs`, `*.test.cjs`, `*.test.ts`, karşılık gelen `*.spec.*` biçimleri ve `*.d.ts`. `latest.js` veya `contest.js` adlı bir komut yine yüklenir.
 
 ```ts
 import type { CommandDefinition } from "sparkcord";
