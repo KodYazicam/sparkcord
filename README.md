@@ -242,9 +242,12 @@ Checked in this order:
 `Administrator` satisfies every entry in `permissions`, matching Discord's own
 rule that the flag implies all guild permissions. discord.js reports exactly
 that flag for a guild owner, so owners and full-admin roles are not rejected
-by moderation commands. `Administrator` does **not** satisfy `ownerOnly` and
-does **not** make a guild-only command usable in DMs; import `isAdministrator`
-from `sparkcord` when you need the same test in your own code.
+by moderation commands. Names are resolved case-insensitively and by Discord
+bit, the same way `default_member_permissions` is built, so `banmembers` and
+`BanMembers` behave identically and aliases such as `ManageEmojisAndStickers`
+match `ManageGuildExpressions`. `Administrator` does **not** satisfy `ownerOnly`
+and does **not** make a guild-only command usable in DMs; import
+`isAdministrator` from `sparkcord` when you need the same test in your own code.
 
 ## Slash registration
 
