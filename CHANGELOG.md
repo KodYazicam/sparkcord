@@ -22,6 +22,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- An error thrown by a button, select menu, modal or autocomplete handler no
+  longer escapes as an unhandled rejection from the `interactionCreate`
+  listener; it is logged with the interaction kind and id and returned as
+  `{ ok: false, reason }`. The `interactionCreate` and `messageCreate`
+  listeners also catch unexpected failures instead of terminating the process.
 - Turkish and German READMEs now document the `github:` install path and the
   `prepare` build, keeping the translated library snippet in sync with English.
 - Commands with `permissions` no longer reject guild owners and roles that hold
