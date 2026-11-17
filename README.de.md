@@ -79,7 +79,7 @@ Das vollständige `createSparkBot({ client, commandsDir, eventsDir, prefix, owne
 
 ## Command-Module
 
-Eine Datei exportiert genau einen Default. Unterordner werden geladen. Dateien namens `*.test.ts`, `*.spec.ts` und `*.d.ts` werden übersprungen.
+Eine Datei exportiert genau einen Default. Unterordner werden geladen. Danebenliegende Tests und Deklarationen werden übersprungen: `*.test.js`, `*.test.mjs`, `*.test.cjs`, `*.test.ts`, die entsprechenden `*.spec.*`-Formen und `*.d.ts`. Ein Befehl namens `latest.js` oder `contest.js` wird weiterhin geladen.
 
 ```ts
 import type { CommandDefinition } from "sparkcord";

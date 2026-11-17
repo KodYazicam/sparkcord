@@ -22,6 +22,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Colocated test modules no longer abort startup: the loader skips
+  `*.test.js|mjs|cjs|ts` and `*.spec.js|mjs|cjs|ts` alongside `*.d.ts`, so a
+  JavaScript bot with tests next to its commands boots again.
 - An error thrown by a button, select menu, modal or autocomplete handler no
   longer escapes as an unhandled rejection from the `interactionCreate`
   listener; it is logged with the interaction kind and id and returned as

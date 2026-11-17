@@ -4,6 +4,8 @@ import { pathToFileURL } from "node:url";
 import type { CommandDefinition, EventDefinition, LoadedCommand, LoadedEvent } from "../types.js";
 
 const CODE_EXT = new Set([".js", ".mjs", ".cjs", ".ts"]);
+// Colocated unit tests and declarations must never be imported as command/event modules.
+const SKIP_MODULE = /\.d\.ts$|\.(?:test|spec)\.[cm]?[jt]s$/;
 
 export function listModules(dir: string): string[] {
   const out: string[] = [];
@@ -27,7 +29,7 @@ function walk(dir: string, out: string[]): void {
       continue;
     }
     if (!CODE_EXT.has(extname(name))) continue;
-    if (name.endsWith(".d.ts") || name.endsWith(".test.ts") || name.endsWith(".spec.ts")) continue;
+    if (SKIP_MODULE.test(name)) continue;
     out.push(abs);
   }
 }

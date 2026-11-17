@@ -315,6 +315,43 @@ describe("file listing + cli", () => {
   });
 });
 
+describe("loader test/spec exclusion", () => {
+  const rel = (dir: string) => listModules(dir).map((p) => p.slice(dir.length + 1));
+
+  it("skips test and spec modules for every code extension it scans", () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-skip-"));
+    const files = [
+      "ping.js",
+      "latest.js",
+      "contest.js",
+      "inspect.js",
+      "ping.test.js",
+      "ping.spec.mjs",
+      "ping.test.cjs",
+      "ping.spec.ts",
+      "ping.d.ts",
+      "ping.d.mts",
+      "ping.test.mts",
+    ];
+    for (const name of files) {
+      writeFileSync(join(dir, name), "export default { name: 'x', description: 'x', run: () => 1 };\n");
+    }
+    expect(rel(dir)).toEqual(["contest.js", "inspect.js", "latest.js", "ping.js"]);
+  });
+
+  it("validateCommands ignores colocated test files instead of aborting", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-validate-skip-"));
+    writeFileSync(
+      join(dir, "ping.js"),
+      'export default { name: "ping", description: "pong", run: () => "pong" };\n',
+    );
+    writeFileSync(join(dir, "ping.test.js"), "export const cases = [];\n");
+    const { issues, commands } = await validateCommands(dir);
+    expect(issues).toEqual([]);
+    expect(commands).toBe(1);
+  });
+});
+
 describe("validate", () => {
   it("reports definition problems without touching Discord", () => {
     const bad = {
