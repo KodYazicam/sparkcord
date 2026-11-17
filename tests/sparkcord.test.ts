@@ -88,6 +88,42 @@ describe("permissions + cooldown", () => {
     ).toMatch(/BanMembers/);
   });
 
+  it("matches declared permissions case-insensitively and by bit", () => {
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["banmembers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["BanMembers"]) },
+      ),
+    ).toBeNull();
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["ManageEmojisAndStickers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["ManageGuildExpressions"]) },
+      ),
+    ).toBeNull();
+  });
+
+  it("still denies a missing or unknown permission", () => {
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["banmembers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["SendMessages"]) },
+      ),
+    ).toMatch(/banmembers/);
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["FuturePermission"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["SendMessages"]) },
+      ),
+    ).toMatch(/FuturePermission/);
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["futurepermission"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["FuturePermission"]) },
+      ),
+    ).toBeNull();
+  });
+
   it("detects the Administrator flag in any capitalisation", () => {
     expect(isAdministrator(new Set(["Administrator"]))).toBe(true);
     expect(isAdministrator(new Set(["ADMINISTRATOR", "SendMessages"]))).toBe(true);
@@ -356,6 +392,81 @@ describe("validate", () => {
       'export default { name: "ping", description: "pong", run: () => "pong" };\n',
     );
     expect(await validateDir(undefined, good)).toBe(0);
+  });
+});
+
+describe("handler error containment", () => {
+  const boom = {
+    customId: "boom",
+    run: () => {
+      throw new Error("handler exploded");
+    },
+  };
+
+  async function captureErrors<T>(fn: () => Promise<T>): Promise<T> {
+    const original = console.error;
+    console.error = () => undefined;
+    try {
+      return await fn();
+    } finally {
+      console.error = original;
+    }
+  }
+
+  it("returns ok:false when a component handler throws", async () => {
+    const bot = new SparkBot({ commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")), autoRegister: false });
+    bot.interactions.onComponent(boom);
+    const result = await captureErrors(() =>
+      bot.handleInteraction({ isButton: () => true, customId: "boom_42", user: { id: "u1" } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("handler exploded");
+  });
+
+  it("returns ok:false when an autocomplete handler throws", async () => {
+    const bot = new SparkBot({ commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")), autoRegister: false });
+    bot.interactions.onAutocomplete({
+      command: "search",
+      run: () => {
+        throw new Error("autocomplete exploded");
+      },
+    });
+    const result = await captureErrors(() =>
+      bot.handleInteraction({ isAutocomplete: () => true, commandName: "search", user: { id: "u1" } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("autocomplete exploded");
+  });
+
+  it("keeps a handler failure in a gateway listener off the unhandled-rejection path", async () => {
+    const bot = new SparkBot({ commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")), autoRegister: false });
+    bot.interactions.onComponent(boom);
+    const listeners: Record<string, Array<(arg: unknown) => unknown>> = {};
+    const client = {
+      user: null,
+      on: (event: string, fn: (arg: unknown) => unknown) => {
+        (listeners[event] ??= []).push(fn);
+        return client;
+      },
+      once: () => client,
+    };
+    bot.attach(client);
+
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => {
+      unhandled.push(reason);
+    };
+    const original = console.error;
+    console.error = () => undefined;
+    process.on("unhandledRejection", onUnhandled);
+    try {
+      listeners.interactionCreate[0]({ isButton: () => true, customId: "boom_1", user: { id: "u1" } });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+      console.error = original;
+    }
+    expect(unhandled).toEqual([]);
   });
 });
 

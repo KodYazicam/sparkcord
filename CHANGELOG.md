@@ -22,6 +22,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- An error thrown by a button, select menu, modal or autocomplete handler no
+  longer escapes as an unhandled rejection from the `interactionCreate`
+  listener; it is logged with the interaction kind and id and returned as
+  `{ ok: false, reason }`. The `interactionCreate` and `messageCreate`
+  listeners also catch unexpected failures instead of terminating the process.
 - An error thrown or rejected by a file-based event handler no longer escapes
   `client.on`/`client.once` as an unhandled rejection. `SparkBot.attach` logs
   `[sparkcord] event <name> failed: …` and the listener returns normally, so a
@@ -35,6 +40,10 @@ All notable changes to this project are documented here. The format follows
   `command.permissions`, so gated commands are hidden from members who cannot
   use them. Unknown permission names now fail payload build and
   `sparkcord validate` instead of registering the command as public.
+- Runtime permission checks resolve names case-insensitively and by Discord
+  bit, so `banmembers` matches `BanMembers` and aliases such as
+  `ManageEmojisAndStickers` match `ManageGuildExpressions` instead of denying
+  the member who holds the permission.
 
 ## [1.0.0] - 2026-09-26
 
