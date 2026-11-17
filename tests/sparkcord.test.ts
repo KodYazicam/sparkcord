@@ -88,6 +88,42 @@ describe("permissions + cooldown", () => {
     ).toMatch(/BanMembers/);
   });
 
+  it("matches declared permissions case-insensitively and by bit", () => {
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["banmembers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["BanMembers"]) },
+      ),
+    ).toBeNull();
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["ManageEmojisAndStickers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["ManageGuildExpressions"]) },
+      ),
+    ).toBeNull();
+  });
+
+  it("still denies a missing or unknown permission", () => {
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["banmembers"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["SendMessages"]) },
+      ),
+    ).toMatch(/banmembers/);
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["FuturePermission"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["SendMessages"]) },
+      ),
+    ).toMatch(/FuturePermission/);
+    expect(
+      checkCommandAccess(
+        { ...ping, guildOnly: true, permissions: ["futurepermission"] },
+        { userId: "1", inGuild: true, memberPermissions: new Set(["FuturePermission"]) },
+      ),
+    ).toBeNull();
+  });
+
   it("detects the Administrator flag in any capitalisation", () => {
     expect(isAdministrator(new Set(["Administrator"]))).toBe(true);
     expect(isAdministrator(new Set(["ADMINISTRATOR", "SendMessages"]))).toBe(true);

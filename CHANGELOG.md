@@ -31,6 +31,10 @@ All notable changes to this project are documented here. The format follows
   `command.permissions`, so gated commands are hidden from members who cannot
   use them. Unknown permission names now fail payload build and
   `sparkcord validate` instead of registering the command as public.
+- Runtime permission checks resolve names case-insensitively and by Discord
+  bit, so `banmembers` matches `BanMembers` and aliases such as
+  `ManageEmojisAndStickers` match `ManageGuildExpressions` instead of denying
+  the member who holds the permission.
 
 ## [1.0.0] - 2026-09-26
 
