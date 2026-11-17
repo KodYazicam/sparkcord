@@ -432,6 +432,88 @@ describe("validate", () => {
   });
 });
 
+describe("validate Discord option limits", () => {
+  it("rejects a required option that follows an optional one", () => {
+    const messages = validateDefinition(
+      {
+        ...ping,
+        options: [
+          { name: "reason", description: "why", type: "string" },
+          { name: "target", description: "who", type: "user", required: true },
+        ],
+      },
+      "warn.js",
+    ).map((i) => i.message);
+    expect(messages.some((m) => m.includes('option "target"') && m.includes("required"))).toBe(true);
+  });
+
+  it("rejects option descriptions longer than Discord's 100 character cap", () => {
+    const messages = validateDefinition(
+      { ...ping, options: [{ name: "reason", description: "x".repeat(101), type: "string" }] },
+      "warn.js",
+    ).map((i) => i.message);
+    expect(messages.some((m) => m.includes("100"))).toBe(true);
+  });
+
+  it("rejects more than 25 options like Discord does", () => {
+    const options = Array.from({ length: 26 }, (_, i) => ({
+      name: `opt${i}`,
+      description: "an option",
+      type: "string" as const,
+    }));
+    const messages = validateDefinition({ ...ping, options }, "many.js").map((i) => i.message);
+    expect(messages.some((m) => m.includes("25"))).toBe(true);
+  });
+
+  it("rejects choices on an option type that cannot carry them", () => {
+    const messages = validateDefinition(
+      {
+        ...ping,
+        options: [
+          { name: "target", description: "who", type: "user", choices: [{ name: "me", value: "1" }] },
+        ],
+      },
+      "warn.js",
+    ).map((i) => i.message);
+    expect(messages.some((m) => m.includes("choices") && m.includes("string"))).toBe(true);
+  });
+
+  it("rejects more than 25 choices and overlong choice values", () => {
+    const tooMany = Array.from({ length: 26 }, (_, i) => ({ name: `c${i}`, value: `v${i}` }));
+    const manyMessages = validateDefinition(
+      { ...ping, options: [{ name: "pick", description: "pick", type: "string", choices: tooMany }] },
+      "pick.js",
+    ).map((i) => i.message);
+    expect(manyMessages.some((m) => m.includes("25"))).toBe(true);
+
+    const longValue = validateDefinition(
+      {
+        ...ping,
+        options: [
+          { name: "pick", description: "pick", type: "string", choices: [{ name: "long", value: "v".repeat(101) }] },
+        ],
+      },
+      "pick.js",
+    ).map((i) => i.message);
+    expect(longValue.some((m) => m.includes("100"))).toBe(true);
+  });
+
+  it("still accepts a well-formed command with choices", () => {
+    expect(
+      validateDefinition(
+        {
+          ...ping,
+          options: [
+            { name: "mode", description: "play mode", type: "string", required: true, choices: [{ name: "fast", value: "fast" }] },
+            { name: "note", description: "optional note", type: "string" },
+          ],
+        },
+        "good.js",
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe("handler error containment", () => {
   const boom = {
     customId: "boom",

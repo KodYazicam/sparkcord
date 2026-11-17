@@ -47,6 +47,12 @@ All notable changes to this project are documented here. The format follows
   bit, so `banmembers` matches `BanMembers` and aliases such as
   `ManageEmojisAndStickers` match `ManageGuildExpressions` instead of denying
   the member who holds the permission.
+- `sparkcord validate` now enforces Discord's command-option limits, so a
+  directory it accepts can no longer fail `commands.set()` with
+  `50035 Invalid Form Body`: required options after an optional one, more than
+  25 options, more than 25 choices, choices on a type that cannot carry them,
+  and option descriptions or choice names/values longer than 100 characters
+  are all reported.
 
 ## [1.0.0] - 2026-09-26
 
