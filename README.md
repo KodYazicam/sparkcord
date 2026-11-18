@@ -282,7 +282,7 @@ node dist/cli.js validate src/commands
 # validate  6 command(s) OK in /home/me/bot/src/commands
 ```
 
-Checks: `name` is 1-32 chars of `[a-z0-9_-]`, `description` is 1-100 chars, `kind` / `cooldown` / `guildOnly` / `ownerOnly` / `aliases` / `options` types, option names and `type` values, choice shapes, permission names, duplicate names and aliases, and module import failures. With no `dir` argument it tries `src/commands` then `commands`. Exit `0` = ready to run, `1` = issues (each printed as `error <file>: <message>`). Works in CI: run it before deploying, after pulling, or in a pre-push hook.
+Checks: `name` is 1-32 chars of `[a-z0-9_-]`, `description` is 1-100 chars, `kind` / `cooldown` / `guildOnly` / `ownerOnly` / `aliases` / `options` types, option names and `type` values, choice shapes, permission names, duplicate names and aliases, and module import failures. It also enforces the limits Discord applies to command options: required options must come before optional ones, at most 25 options, at most 25 choices (only on `string`, `integer`, and `number`), and option descriptions/choice names/choice values no longer than 100 characters. Violating any of them would make `commands.set()` fail with `50035 Invalid Form Body` and drop every command, so `validate` reports it before the bot starts. With no `dir` argument it tries `src/commands` then `commands`. Exit `0` = ready to run, `1` = issues (each printed as `error <file>: <message>`). Works in CI: run it before deploying, after pulling, or in a pre-push hook.
 
 ## Intents
 
