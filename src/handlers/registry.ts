@@ -9,14 +9,22 @@ export class CommandRegistry {
     if (this.byName.has(name)) {
       throw new Error(`Duplicate command: ${name}`);
     }
-    this.byName.set(name, command);
+    const aliasOwner = this.aliases.get(name);
+    if (aliasOwner) {
+      throw new Error(`Duplicate command: ${name} (already an alias of ${aliasOwner})`);
+    }
+    // Collect and validate every alias before writing anything, so a rejected
+    // registration leaves neither the command nor a partial alias set behind.
+    const keys: string[] = [];
     for (const alias of command.definition.aliases ?? []) {
       const key = alias.toLowerCase();
-      if (this.aliases.has(key) || this.byName.has(key)) {
+      if (key === name || this.byName.has(key) || this.aliases.has(key) || keys.includes(key)) {
         throw new Error(`Duplicate alias: ${alias}`);
       }
-      this.aliases.set(key, name);
+      keys.push(key);
     }
+    this.byName.set(name, command);
+    for (const key of keys) this.aliases.set(key, name);
   }
 
   resolve(name: string): LoadedCommand | undefined {
