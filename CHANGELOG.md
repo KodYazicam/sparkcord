@@ -22,19 +22,20 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
-<<<<<<< HEAD
 - A command whose `run()` throws is now logged once as
   `[sparkcord] command <name> failed (<kind>): …` before the generic
   "Command failed. Check the bot logs." reply. Previously the error was
   swallowed, so the logs the reply points at contained nothing. Options,
   arguments, and message content are never written to the line.
-=======
 - A command name that matches an earlier command's alias is now rejected with
   `Duplicate command: <name> (already an alias of <owner>)` instead of silently
   taking over the alias. Registration validates the name and every alias before
   mutating the registry, so a rejected module leaves no half-registered command,
   and `sparkcord validate` reports these collisions.
->>>>>>> pr-43
+- Channel, user, role and mentionable select menus now reach
+  `bot.interactions.onComponent` handlers. Only `isStringSelectMenu()` was
+  recognised, so the other four pickers were classified as `unknown`, skipped
+  without an acknowledgement and shown as "This interaction failed".
 - Colocated test modules no longer abort startup: the loader skips
   `*.test.js|mjs|cjs|ts` and `*.spec.js|mjs|cjs|ts` alongside `*.d.ts`, so a
   JavaScript bot with tests next to its commands boots again.

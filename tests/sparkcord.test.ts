@@ -199,6 +199,38 @@ describe("interaction router", () => {
     expect(result.ok).toBe(true);
     expect(seen).toBe("close,12");
   });
+
+  it("routes every Discord select menu flavour to component handlers", async () => {
+    const flavours = [
+      "isStringSelectMenu",
+      "isUserSelectMenu",
+      "isRoleSelectMenu",
+      "isMentionableSelectMenu",
+      "isChannelSelectMenu",
+    ] as const;
+
+    for (const flavour of flavours) {
+      expect(interactionKind({ [flavour]: () => true })).toBe("select");
+    }
+    expect(interactionKind({ isAnySelectMenu: () => true })).toBe("select");
+
+    const router = new InteractionRouter();
+    let seen = "";
+    router.onComponent({
+      customId: "settings",
+      run: ({ args }) => {
+        seen = args.join(",");
+        return "ok";
+      },
+    });
+
+    const result = await router.dispatch(
+      { isChannelSelectMenu: () => true, customId: "settings_channel_7" },
+      null,
+    );
+    expect(result).toEqual({ ok: true, value: "ok" });
+    expect(seen).toBe("channel,7");
+  });
 });
 
 describe("prefix parser", () => {
