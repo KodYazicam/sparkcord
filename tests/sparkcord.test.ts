@@ -294,6 +294,81 @@ describe("SparkBot invoke", () => {
   });
 });
 
+describe("command failure logging", () => {
+  const boom: CommandDefinition = {
+    name: "boom",
+    description: "always throws",
+    run: () => {
+      throw new Error("boom exploded");
+    },
+  };
+
+  async function captureErrors<T>(fn: () => Promise<T>): Promise<{ result: T; lines: string[] }> {
+    const original = console.error;
+    const lines: string[] = [];
+    console.error = (...args: unknown[]) => {
+      lines.push(args.map((arg) => String(arg)).join(" "));
+    };
+    try {
+      return { result: await fn(), lines };
+    } finally {
+      console.error = original;
+    }
+  }
+
+  it("logs a prefix command failure with the command name", async () => {
+    const bot = new SparkBot({
+      commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")),
+      prefix: "!",
+      denyReplies: false,
+    });
+    bot.commands.register({ definition: boom, path: "boom.ts" });
+
+    const { result, lines } = await captureErrors(() =>
+      bot.handleMessage({
+        author: { bot: false, id: "u3" },
+        content: "!boom",
+        guildId: "g",
+        member: { permissions: { toArray: () => [] } },
+      }),
+    );
+
+    expect(result).toEqual({ ok: false, reason: "boom exploded" });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain("[sparkcord]");
+    expect(lines[0]).toContain("command boom failed");
+    expect(lines[0]).toContain("boom exploded");
+  });
+
+  it("logs a slash command failure and still replies generically", async () => {
+    const bot = new SparkBot({
+      commandsDir: mkdtempSync(join(tmpdir(), "sparkcord-")),
+      denyReplies: true,
+    });
+    bot.commands.register({ definition: boom, path: "boom.ts" });
+    const replies: unknown[] = [];
+
+    const { result, lines } = await captureErrors(() =>
+      bot.handleInteraction({
+        isChatInputCommand: () => true,
+        commandName: "boom",
+        user: { id: "u4" },
+        guildId: "g",
+        member: { permissions: { toArray: () => [] } },
+        options: { data: [] },
+        reply: async (payload: unknown) => {
+          replies.push(payload);
+        },
+      }),
+    );
+
+    expect(result).toEqual({ ok: false, reason: "boom exploded" });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain("command boom failed");
+    expect(replies).toEqual([{ content: "Command failed. Check the bot logs.", ephemeral: true }]);
+  });
+});
+
 describe("file listing + cli", () => {
   it("lists command modules and prints help", () => {
     const dir = mkdtempSync(join(tmpdir(), "sparkcord-mod-"));
@@ -429,6 +504,88 @@ describe("validate", () => {
       'export default { name: "ping", description: "pong", run: () => "pong" };\n',
     );
     expect(await validateDir(undefined, good)).toBe(0);
+  });
+});
+
+describe("validate Discord option limits", () => {
+  it("rejects a required option that follows an optional one", () => {
+    const messages = validateDefinition(
+      {
+        ...ping,
+        options: [
+          { name: "reason", description: "why", type: "string" },
+          { name: "target", description: "who", type: "user", required: true },
+        ],
+      },
+      "warn.js",
+    ).map((i) => i.message);
+    expect(messages.some((m) => m.includes('option "target"') && m.includes("required"))).toBe(true);
+  });
+
+  it("rejects option descriptions longer than Discord's 100 character cap", () => {
+    const messages = validateDefinition(
+      { ...ping, options: [{ name: "reason", description: "x".repeat(101), type: "string" }] },
+      "warn.js",
+    ).map((i) => i.message);
+    expect(messages.some((m) => m.includes("100"))).toBe(true);
+  });
+
+  it("rejects more than 25 options like Discord does", () => {
+    const options = Array.from({ length: 26 }, (_, i) => ({
+      name: `opt${i}`,
+      description: "an option",
+      type: "string" as const,
+    }));
+    const messages = validateDefinition({ ...ping, options }, "many.js").map((i) => i.message);
+    expect(messages.some((m) => m.includes("25"))).toBe(true);
+  });
+
+  it("rejects choices on an option type that cannot carry them", () => {
+    const messages = validateDefinition(
+      {
+        ...ping,
+        options: [
+          { name: "target", description: "who", type: "user", choices: [{ name: "me", value: "1" }] },
+        ],
+      },
+      "warn.js",
+    ).map((i) => i.message);
+    expect(messages.some((m) => m.includes("choices") && m.includes("string"))).toBe(true);
+  });
+
+  it("rejects more than 25 choices and overlong choice values", () => {
+    const tooMany = Array.from({ length: 26 }, (_, i) => ({ name: `c${i}`, value: `v${i}` }));
+    const manyMessages = validateDefinition(
+      { ...ping, options: [{ name: "pick", description: "pick", type: "string", choices: tooMany }] },
+      "pick.js",
+    ).map((i) => i.message);
+    expect(manyMessages.some((m) => m.includes("25"))).toBe(true);
+
+    const longValue = validateDefinition(
+      {
+        ...ping,
+        options: [
+          { name: "pick", description: "pick", type: "string", choices: [{ name: "long", value: "v".repeat(101) }] },
+        ],
+      },
+      "pick.js",
+    ).map((i) => i.message);
+    expect(longValue.some((m) => m.includes("100"))).toBe(true);
+  });
+
+  it("still accepts a well-formed command with choices", () => {
+    expect(
+      validateDefinition(
+        {
+          ...ping,
+          options: [
+            { name: "mode", description: "play mode", type: "string", required: true, choices: [{ name: "fast", value: "fast" }] },
+            { name: "note", description: "optional note", type: "string" },
+          ],
+        },
+        "good.js",
+      ),
+    ).toEqual([]);
   });
 });
 
