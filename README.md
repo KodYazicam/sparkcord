@@ -211,7 +211,7 @@ export default {
 
 An event handler may throw or reject; sparkcord contains it. The listener logs `[sparkcord] event <name> failed: …` and returns normally, so one broken event module cannot become an unhandled rejection that terminates the process.
 
-Button / select / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
+Button / any select menu (string, user, role, mentionable, channel) / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
 
 If a component or autocomplete handler throws, the error is contained: sparkcord logs `[sparkcord] <kind> <id> failed: …` and `bot.handleInteraction` returns `{ ok: false, reason }` instead of rejecting, so one broken button cannot crash the bot. The `interactionCreate` and `messageCreate` listeners log anything unexpected rather than letting it become an unhandled rejection.
 

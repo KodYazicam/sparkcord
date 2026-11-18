@@ -22,6 +22,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Channel, user, role and mentionable select menus now reach
+  `bot.interactions.onComponent` handlers. Only `isStringSelectMenu()` was
+  recognised, so the other four pickers were classified as `unknown`, skipped
+  without an acknowledgement and shown as "This interaction failed".
 - Colocated test modules no longer abort startup: the loader skips
   `*.test.js|mjs|cjs|ts` and `*.spec.js|mjs|cjs|ts` alongside `*.d.ts`, so a
   JavaScript bot with tests next to its commands boots again.
