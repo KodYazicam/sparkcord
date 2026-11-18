@@ -22,6 +22,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- A command whose `run()` throws is now logged once as
+  `[sparkcord] command <name> failed (<kind>): …` before the generic
+  "Command failed. Check the bot logs." reply. Previously the error was
+  swallowed, so the logs the reply points at contained nothing. Options,
+  arguments, and message content are never written to the line.
+- A command name that matches an earlier command's alias is now rejected with
+  `Duplicate command: <name> (already an alias of <owner>)` instead of silently
+  taking over the alias. Registration validates the name and every alias before
+  mutating the registry, so a rejected module leaves no half-registered command,
+  and `sparkcord validate` reports these collisions.
 - Channel, user, role and mentionable select menus now reach
   `bot.interactions.onComponent` handlers. Only `isStringSelectMenu()` was
   recognised, so the other four pickers were classified as `unknown`, skipped
@@ -51,6 +61,12 @@ All notable changes to this project are documented here. The format follows
   bit, so `banmembers` matches `BanMembers` and aliases such as
   `ManageEmojisAndStickers` match `ManageGuildExpressions` instead of denying
   the member who holds the permission.
+- `sparkcord validate` now enforces Discord's command-option limits, so a
+  directory it accepts can no longer fail `commands.set()` with
+  `50035 Invalid Form Body`: required options after an optional one, more than
+  25 options, more than 25 choices, choices on a type that cannot carry them,
+  and option descriptions or choice names/values longer than 100 characters
+  are all reported.
 
 ## [1.0.0] - 2026-09-26
 
