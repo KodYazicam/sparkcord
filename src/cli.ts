@@ -23,8 +23,9 @@ The library itself runs on Node 20+ with compiled .js command files.
 The starter uses --experimental-strip-types, so it needs Node 22.6+.
 
 validate checks every command file the same way the bot loads them,
-then reports name/description/option/cooldown problems, option ordering
-and Discord's 25-option/25-choice/100-char limits, and duplicate names.
+then reports name/description/option/cooldown problems, duplicate command
+and option names, option ordering, choice value types, and Discord's
+25-option/25-choice/100-char limits.
 Exit code 0 means the directory is ready to run.
 
 Existing files are never overwritten. If the directory already has a
