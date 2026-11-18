@@ -75,6 +75,7 @@ export function optionsFromPrefix(args: string[], spec: CommandOption[] = []): R
 export async function replyTo(raw: unknown, content: string, extra?: { ephemeral?: boolean }): Promise<unknown> {
   const target = raw as {
     reply?: (payload: unknown) => unknown;
+    editReply?: (payload: unknown) => unknown;
     followUp?: (payload: unknown) => unknown;
     deferred?: boolean;
     replied?: boolean;
@@ -82,6 +83,12 @@ export async function replyTo(raw: unknown, content: string, extra?: { ephemeral
   };
   const payload = extra?.ephemeral ? { content, ephemeral: true } : content;
   try {
+    // A deferred interaction must be completed with editReply(). followUp()
+    // posts a second message and leaves the "Bot is thinking…" placeholder in
+    // the channel. followUp() is only correct once a real reply was sent.
+    if (target.deferred && !target.replied && typeof target.editReply === "function") {
+      return await target.editReply(payload);
+    }
     if (target.deferred || target.replied) {
       if (typeof target.followUp === "function") return await target.followUp(payload);
     }

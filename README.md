@@ -232,6 +232,8 @@ import type { CommandContext } from "sparkcord";
 // ctx.reply(text, { ephemeral })
 ```
 
+`ctx.reply()` sends the first response. If the command acknowledged early with `ctx.raw.deferReply()`, the next `ctx.reply()` completes that deferred reply with `editReply()` instead of posting a second message, so the user never keeps a stale "Bot is thinking…" placeholder. After a reply was sent, further `ctx.reply()` calls use `followUp()`.
+
 If `run` throws, sparkcord catches it, replies (when `denyReplies` is on), and returns `{ ok: false, reason }` instead of crashing the process.
 
 ## Permissions and cooldowns
