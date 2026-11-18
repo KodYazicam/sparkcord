@@ -307,6 +307,7 @@ If prefix commands silently do nothing, Message Content is off in the portal.
 | `Cannot import TypeScript command` | Compile, or run with `--experimental-strip-types`. |
 | `commandsDir` empty | Path must exist and contain `.ts`/`.js` files with `name` + `run`. |
 | `refusing to overwrite` | Directory already has `package.json`. Pass `--force` or pick another dir. |
+| Command fails, logs empty | Failed commands log `[sparkcord] command <name> failed (<kind>):`; update sparkcord if that line is missing. |
 
 ## FAQ
 

@@ -22,6 +22,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- A command whose `run()` throws is now logged once as
+  `[sparkcord] command <name> failed (<kind>): …` before the generic
+  "Command failed. Check the bot logs." reply. Previously the error was
+  swallowed, so the logs the reply points at contained nothing. Options,
+  arguments, and message content are never written to the line.
 - Colocated test modules no longer abort startup: the loader skips
   `*.test.js|mjs|cjs|ts` and `*.spec.js|mjs|cjs|ts` alongside `*.d.ts`, so a
   JavaScript bot with tests next to its commands boots again.
