@@ -4,14 +4,19 @@ export function interactionKind(raw: unknown): InteractionKind {
   const ix = raw as {
     isChatInputCommand?: () => boolean;
     isButton?: () => boolean;
+    isAnySelectMenu?: () => boolean;
     isStringSelectMenu?: () => boolean;
+    isUserSelectMenu?: () => boolean;
+    isRoleSelectMenu?: () => boolean;
+    isMentionableSelectMenu?: () => boolean;
+    isChannelSelectMenu?: () => boolean;
     isModalSubmit?: () => boolean;
     isAutocomplete?: () => boolean;
     type?: number;
   };
   if (typeof ix.isChatInputCommand === "function" && ix.isChatInputCommand()) return "slash";
   if (typeof ix.isButton === "function" && ix.isButton()) return "button";
-  if (typeof ix.isStringSelectMenu === "function" && ix.isStringSelectMenu()) return "select";
+  if (isAnySelectMenu(ix)) return "select";
   if (typeof ix.isModalSubmit === "function" && ix.isModalSubmit()) return "modal";
   if (typeof ix.isAutocomplete === "function" && ix.isAutocomplete()) return "autocomplete";
   if (ix.type === 2) return "slash";
@@ -19,6 +24,30 @@ export function interactionKind(raw: unknown): InteractionKind {
   if (ix.type === 4) return "autocomplete";
   if (ix.type === 5) return "modal";
   return "unknown";
+}
+
+/**
+ * Discord has five select menu flavours (string, user, role, mentionable,
+ * channel). discord.js exposes one predicate per flavour plus the generic
+ * isAnySelectMenu(); Accept both so mocks and older versions still route.
+ */
+function isAnySelectMenu(ix: {
+  isAnySelectMenu?: () => boolean;
+  isStringSelectMenu?: () => boolean;
+  isUserSelectMenu?: () => boolean;
+  isRoleSelectMenu?: () => boolean;
+  isMentionableSelectMenu?: () => boolean;
+  isChannelSelectMenu?: () => boolean;
+}): boolean {
+  const predicates = [
+    ix.isStringSelectMenu,
+    ix.isUserSelectMenu,
+    ix.isRoleSelectMenu,
+    ix.isMentionableSelectMenu,
+    ix.isChannelSelectMenu,
+  ];
+  if (predicates.some((predicate) => typeof predicate === "function" && predicate())) return true;
+  return typeof ix.isAnySelectMenu === "function" && ix.isAnySelectMenu();
 }
 
 export function customIdHead(raw: unknown): string | null {

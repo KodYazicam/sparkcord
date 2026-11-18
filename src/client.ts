@@ -216,6 +216,9 @@ export class SparkBot {
       return { ok: true, value };
     } catch (error) {
       const message = (error as Error).message || "command-error";
+      // The user-facing reply points at the logs, so the failure must land there.
+      // Command options, message content, and user ids stay out of the line.
+      console.error(`[sparkcord] command ${loaded.definition.name} failed (${ctx.kind}):`, error);
       if (this.options.denyReplies !== false) {
         await replyTo(ctx.raw, "Command failed. Check the bot logs.", { ephemeral: true });
       }

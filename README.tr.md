@@ -147,6 +147,7 @@ Prefix komutları sessizce çalışmıyorsa portaldaki Message Content ayarı ka
 | Node 20'de başlangıç çalışmıyor | Node 22.6+ kullanın veya `tsx` ekleyin. Kitaplık `.js` dosyalarıyla Node 20'yi desteklemeye devam eder. |
 | `Cannot import TypeScript command` | Derleyin veya `--experimental-strip-types` ile çalıştırın. |
 | `refusing to overwrite` | Dizinde zaten `package.json` var. `--force` kullanın veya başka bir dizin seçin. |
+| Komut başarısız, günlük boş | Başarısız komutlar `[sparkcord] command <name> failed (<kind>):` satırı yazar; bu satır yoksa sparkcord'u güncelleyin. |
 
 ## Katkı, güvenlik ve lisans
 

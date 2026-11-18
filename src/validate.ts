@@ -10,6 +10,13 @@ export interface ValidationIssue {
 
 const NAME_PATTERN = /^[a-z0-9_-]{1,32}$/;
 const OPTION_TYPES = new Set(["string", "integer", "boolean", "user", "channel", "role", "number"]);
+// Discord's application-command limits. Violating any of them makes
+// commands.set() fail with 50035 and silently drops every command, so
+// validate must catch them before the bot starts.
+const CHOICE_TYPES = new Set(["string", "integer", "number"]);
+const MAX_OPTIONS = 25;
+const MAX_CHOICES = 25;
+const MAX_TEXT = 100;
 
 function checkOption(option: CommandOption, path: string, issues: ValidationIssue[]): void {
   const where = `${path} option ${JSON.stringify(option?.name ?? "")}`;
@@ -22,6 +29,11 @@ function checkOption(option: CommandOption, path: string, issues: ValidationIssu
   }
   if (!option.description) {
     issues.push({ path, message: `${where} needs a description` });
+  } else if (typeof option.description === "string" && option.description.length > MAX_TEXT) {
+    issues.push({
+      path,
+      message: `${where} description is ${option.description.length} chars; Discord allows at most ${MAX_TEXT}`,
+    });
   }
   if (option.type !== undefined && !OPTION_TYPES.has(option.type)) {
     issues.push({
@@ -29,12 +41,39 @@ function checkOption(option: CommandOption, path: string, issues: ValidationIssu
       message: `${where} has unknown type ${JSON.stringify(option.type)} (allowed: ${[...OPTION_TYPES].join(", ")})`,
     });
   }
-  for (const choice of option.choices ?? []) {
+  if (option.choices === undefined) return;
+  if (!Array.isArray(option.choices)) {
+    issues.push({ path, message: `${where} choices must be an array` });
+    return;
+  }
+  if (option.choices.length > MAX_CHOICES) {
+    issues.push({
+      path,
+      message: `${where} has ${option.choices.length} choices; Discord allows at most ${MAX_CHOICES}`,
+    });
+  }
+  if (option.type !== undefined && OPTION_TYPES.has(option.type) && !CHOICE_TYPES.has(option.type)) {
+    issues.push({
+      path,
+      message: `${where} cannot carry choices: Discord only allows them on string, integer, and number options`,
+    });
+  }
+  for (const choice of option.choices) {
     if (typeof choice?.name !== "string" || !choice.name) {
       issues.push({ path, message: `${where} has a choice without a name` });
+    } else if (choice.name.length > MAX_TEXT) {
+      issues.push({
+        path,
+        message: `${where} has a choice name of ${choice.name.length} chars; Discord allows at most ${MAX_TEXT}`,
+      });
     }
     if (typeof choice?.value !== "string" && typeof choice?.value !== "number") {
       issues.push({ path, message: `${where} has a choice value that is not a string or number` });
+    } else if (typeof choice.value === "string" && choice.value.length > MAX_TEXT) {
+      issues.push({
+        path,
+        message: `${where} has a choice value of ${choice.value.length} chars; Discord allows at most ${MAX_TEXT}`,
+      });
     }
   }
 }
@@ -86,7 +125,28 @@ export function validateDefinition(definition: CommandDefinition, path: string):
   if (definition.options !== undefined && !Array.isArray(definition.options)) {
     issues.push({ path, message: "options must be an array" });
   } else if (Array.isArray(definition.options)) {
-    for (const option of definition.options) checkOption(option, path, issues);
+    if (definition.options.length > MAX_OPTIONS) {
+      issues.push({
+        path,
+        message: `command has ${definition.options.length} options; Discord allows at most ${MAX_OPTIONS}`,
+      });
+    }
+    // Discord rejects the whole payload when a required option follows an
+    // optional one, so report every offender instead of the first.
+    let sawOptional = false;
+    for (const option of definition.options) {
+      checkOption(option, path, issues);
+      if (option?.required === true) {
+        if (sawOptional) {
+          issues.push({
+            path,
+            message: `${path} option ${JSON.stringify(option.name ?? "")} is required but comes after an optional option; Discord requires required options first`,
+          });
+        }
+      } else {
+        sawOptional = true;
+      }
+    }
   }
   if (typeof definition.run !== "function") {
     issues.push({ path, message: "run must be a function" });

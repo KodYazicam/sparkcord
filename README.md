@@ -211,7 +211,7 @@ export default {
 
 An event handler may throw or reject; sparkcord contains it. The listener logs `[sparkcord] event <name> failed: …` and returns normally, so one broken event module cannot become an unhandled rejection that terminates the process.
 
-Button / select / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
+Button / any select menu (string, user, role, mentionable, channel) / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
 
 If a component or autocomplete handler throws, the error is contained: sparkcord logs `[sparkcord] <kind> <id> failed: …` and `bot.handleInteraction` returns `{ ok: false, reason }` instead of rejecting, so one broken button cannot crash the bot. The `interactionCreate` and `messageCreate` listeners log anything unexpected rather than letting it become an unhandled rejection.
 
@@ -284,7 +284,7 @@ node dist/cli.js validate src/commands
 # validate  6 command(s) OK in /home/me/bot/src/commands
 ```
 
-Checks: `name` is 1-32 chars of `[a-z0-9_-]`, `description` is 1-100 chars, `kind` / `cooldown` / `guildOnly` / `ownerOnly` / `aliases` / `options` types, option names and `type` values, choice shapes, permission names, duplicate names and aliases, and module import failures. With no `dir` argument it tries `src/commands` then `commands`. Exit `0` = ready to run, `1` = issues (each printed as `error <file>: <message>`). Works in CI: run it before deploying, after pulling, or in a pre-push hook.
+Checks: `name` is 1-32 chars of `[a-z0-9_-]`, `description` is 1-100 chars, `kind` / `cooldown` / `guildOnly` / `ownerOnly` / `aliases` / `options` types, option names and `type` values, choice shapes, permission names, duplicate names and aliases, and module import failures. It also enforces the limits Discord applies to command options: required options must come before optional ones, at most 25 options, at most 25 choices (only on `string`, `integer`, and `number`), and option descriptions/choice names/choice values no longer than 100 characters. Violating any of them would make `commands.set()` fail with `50035 Invalid Form Body` and drop every command, so `validate` reports it before the bot starts. With no `dir` argument it tries `src/commands` then `commands`. Exit `0` = ready to run, `1` = issues (each printed as `error <file>: <message>`). Works in CI: run it before deploying, after pulling, or in a pre-push hook.
 
 ## Intents
 
@@ -309,6 +309,7 @@ If prefix commands silently do nothing, Message Content is off in the portal.
 | `Cannot import TypeScript command` | Compile, or run with `--experimental-strip-types`. |
 | `commandsDir` empty | Path must exist and contain `.ts`/`.js` files with `name` + `run`. |
 | `refusing to overwrite` | Directory already has `package.json`. Pass `--force` or pick another dir. |
+| Command fails, logs empty | Failed commands log `[sparkcord] command <name> failed (<kind>):`; update sparkcord if that line is missing. |
 
 ## FAQ
 
