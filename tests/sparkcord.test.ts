@@ -7,7 +7,7 @@ import { SparkBot } from "../src/client.js";
 import { CommandRegistry } from "../src/handlers/registry.js";
 import { checkCommandAccess, isAdministrator } from "../src/utils/permissions.js";
 import { CooldownStore } from "../src/utils/cooldown.js";
-import { optionsFromPrefix, optionsFromSlash, parsePrefixArgs, toSlashPayload } from "../src/utils/slash.js";
+import { optionsFromPrefix, optionsFromSlash, parsePrefixArgs, replyTo, toSlashPayload } from "../src/utils/slash.js";
 import { InteractionRouter, customIdHead, interactionKind } from "../src/utils/interactions.js";
 import { PERMISSION_BITS } from "../src/utils/discord-permissions.js";
 import { PermissionFlagsBits } from "discord.js";
@@ -240,6 +240,77 @@ describe("prefix parser", () => {
       args: ["123", "spam"],
     });
     expect(parsePrefixArgs("hello", "!")).toBeNull();
+  });
+});
+
+describe("reply helper", () => {
+  function interaction(overrides: Record<string, unknown> = {}) {
+    const calls: string[] = [];
+    const raw = {
+      deferred: false,
+      replied: false,
+      reply: async (payload: unknown) => {
+        calls.push("reply");
+        return payload;
+      },
+      editReply: async (payload: unknown) => {
+        calls.push("editReply");
+        return payload;
+      },
+      followUp: async (payload: unknown) => {
+        calls.push("followUp");
+        return payload;
+      },
+      ...overrides,
+    };
+    return { raw, calls };
+  }
+
+  it("completes a deferred interaction with editReply", async () => {
+    const { raw, calls } = interaction({ deferred: true });
+    await replyTo(raw, "done");
+    expect(calls).toEqual(["editReply"]);
+  });
+
+  it("keeps the ephemeral flag when editing a deferred reply", async () => {
+    const { raw, calls } = interaction({ deferred: true });
+    const payload = await replyTo(raw, "only you", { ephemeral: true });
+    expect(calls).toEqual(["editReply"]);
+    expect(payload).toEqual({ content: "only you", ephemeral: true });
+  });
+
+  it("replies once and then follows up", async () => {
+    const first = interaction();
+    await replyTo(first.raw, "hello");
+    expect(first.calls).toEqual(["reply"]);
+
+    const second = interaction({ replied: true });
+    await replyTo(second.raw, "again");
+    expect(second.calls).toEqual(["followUp"]);
+  });
+
+  it("edits the placeholder when a command replies after deferReply()", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-"));
+    const bot = new SparkBot({ commandsDir: dir, prefix: "!", denyReplies: false });
+    bot.commands.register({
+      definition: {
+        name: "slow",
+        description: "slow",
+        kind: "slash",
+        run: async (ctx) => ctx.reply("finished"),
+      },
+      path: "slow.ts",
+    });
+    const { raw, calls } = interaction({ deferred: true });
+    const result = await bot.invoke("slow", {
+      userId: "u1",
+      inGuild: true,
+      memberPermissions: new Set(),
+      raw,
+      kind: "slash",
+    });
+    expect(result.ok).toBe(true);
+    expect(calls).toEqual(["editReply"]);
   });
 });
 

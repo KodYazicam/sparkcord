@@ -36,6 +36,10 @@ All notable changes to this project are documented here. The format follows
   `bot.interactions.onComponent` handlers. Only `isStringSelectMenu()` was
   recognised, so the other four pickers were classified as `unknown`, skipped
   without an acknowledgement and shown as "This interaction failed".
+- A command that calls `ctx.raw.deferReply()` and then `ctx.reply()` now
+  completes the deferred reply with `editReply()` instead of posting a second
+  message. The "Bot is thinking…" placeholder no longer lingers next to the
+  real answer. `followUp()` is used only after a reply was already sent.
 - Colocated test modules no longer abort startup: the loader skips
   `*.test.js|mjs|cjs|ts` and `*.spec.js|mjs|cjs|ts` alongside `*.d.ts`, so a
   JavaScript bot with tests next to its commands boots again.
