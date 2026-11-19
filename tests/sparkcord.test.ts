@@ -10,7 +10,7 @@ import { CooldownStore } from "../src/utils/cooldown.js";
 import { optionsFromPrefix, optionsFromSlash, parsePrefixArgs, replyTo, toSlashPayload } from "../src/utils/slash.js";
 import { InteractionRouter, customIdHead, interactionKind } from "../src/utils/interactions.js";
 import { PERMISSION_BITS } from "../src/utils/discord-permissions.js";
-import { PermissionFlagsBits } from "discord.js";
+import { CommandInteractionOptionResolver, PermissionFlagsBits } from "discord.js";
 import { listModules } from "../src/loaders/files.js";
 import { run, validateDir } from "../src/cli.js";
 import { validateDefinition, validateCommands } from "../src/validate.js";
@@ -230,6 +230,84 @@ describe("interaction router", () => {
     );
     expect(result).toEqual({ ok: true, value: "ok" });
     expect(seen).toBe("channel,7");
+  });
+
+  it("passes the typed focused value to autocomplete handlers", async () => {
+    // Use discord.js' real resolver: getFocused(true) returns the whole option
+    // object, so only getFocused() yields what the user typed.
+    const Resolver = CommandInteractionOptionResolver as unknown as new (
+      client: unknown,
+      options: readonly unknown[],
+      resolved: unknown,
+    ) => { getFocused: (getFull?: boolean) => unknown };
+    const options = new Resolver(
+      {},
+      [{ name: "query", type: 3, value: "spark", focused: true }],
+      null,
+    );
+    expect(options.getFocused()).toBe("spark");
+
+    const router = new InteractionRouter();
+    let focused = "";
+    router.onAutocomplete({
+      command: "search",
+      run: ({ focused: value }) => {
+        focused = value;
+        return [];
+      },
+    });
+
+    const result = await router.dispatch(
+      { isAutocomplete: () => true, commandName: "search", options },
+      null,
+    );
+    expect(result.ok).toBe(true);
+    expect(focused).toBe("spark");
+  });
+
+  it("reads .value from a resolver that returns the full focused option", async () => {
+    const resolver = {
+      getFocused: () => ({ name: "query", value: "spark", focused: true }),
+    };
+    const router = new InteractionRouter();
+    let focused = "";
+    router.onAutocomplete({
+      command: "search",
+      run: ({ focused: value }) => {
+        focused = value;
+        return [];
+      },
+    });
+
+    await router.dispatch(
+      { isAutocomplete: () => true, commandName: "search", options: resolver },
+      null,
+    );
+    expect(focused).toBe("spark");
+  });
+
+  it("falls back to an empty query when no focused option exists", async () => {
+    const resolver = {
+      getFocused: () => {
+        throw new Error("focused option not found");
+      },
+    };
+    const router = new InteractionRouter();
+    let focused = "unset";
+    router.onAutocomplete({
+      command: "search",
+      run: ({ focused: value }) => {
+        focused = value;
+        return [];
+      },
+    });
+
+    const result = await router.dispatch(
+      { isAutocomplete: () => true, commandName: "search", options: resolver },
+      null,
+    );
+    expect(result.ok).toBe(true);
+    expect(focused).toBe("");
   });
 });
 
