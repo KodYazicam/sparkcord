@@ -157,9 +157,20 @@ export function validateDefinition(definition: CommandDefinition, path: string):
       }
     }
   }
-  for (const alias of definition.aliases ?? []) {
-    if (typeof alias !== "string" || !alias || alias !== alias.toLowerCase()) {
-      issues.push({ path, message: `aliases must be non-empty lowercase strings (got ${JSON.stringify(alias)})` });
+  // `aliases` comes from untyped .js command modules, so validate must check the
+  // container as well as the entries: a string used to be iterated as
+  // characters (aliases h/e/l/p) and a number threw a TypeError that aborted
+  // the whole validate run instead of reporting one issue.
+  if (definition.aliases !== undefined && !Array.isArray(definition.aliases)) {
+    issues.push({ path, message: "aliases must be an array of lowercase alias names" });
+  } else if (Array.isArray(definition.aliases)) {
+    for (const alias of definition.aliases) {
+      if (typeof alias !== "string" || !NAME_PATTERN.test(alias)) {
+        issues.push({
+          path,
+          message: `alias ${JSON.stringify(alias)} must be a lowercase name of 1-32 chars [a-z0-9_-]`,
+        });
+      }
     }
   }
   if (definition.options !== undefined && !Array.isArray(definition.options)) {
