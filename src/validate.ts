@@ -14,6 +14,8 @@ const OPTION_TYPES = new Set(["string", "integer", "boolean", "user", "channel",
 // commands.set() fail with 50035 and silently drops every command, so
 // validate must catch them before the bot starts.
 const CHOICE_TYPES = new Set(["string", "integer", "number"]);
+// Discord rejects autocomplete on any other option type.
+const AUTOCOMPLETE_TYPES = new Set(["string", "integer", "number"]);
 const MAX_OPTIONS = 25;
 const MAX_CHOICES = 25;
 const MAX_TEXT = 100;
@@ -83,6 +85,25 @@ function checkOption(option: CommandOption, path: string, issues: ValidationIssu
       path,
       message: `${where} required must be a boolean (got ${typeof option.required})`,
     });
+  }
+  if (option.autocomplete !== undefined) {
+    if (typeof option.autocomplete !== "boolean") {
+      issues.push({ path, message: `${where} autocomplete must be a boolean` });
+    } else if (option.autocomplete) {
+      const type = option.type ?? "string";
+      if (!AUTOCOMPLETE_TYPES.has(type)) {
+        issues.push({
+          path,
+          message: `${where} cannot autocomplete a ${type} option; Discord only allows autocomplete on string, integer, and number options`,
+        });
+      }
+      if (option.choices !== undefined) {
+        issues.push({
+          path,
+          message: `${where} cannot set both autocomplete and choices; Discord rejects the command`,
+        });
+      }
+    }
   }
   if (option.choices === undefined) return;
   if (!Array.isArray(option.choices)) {

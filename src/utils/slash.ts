@@ -15,13 +15,19 @@ export function toSlashPayload(command: CommandDefinition): Record<string, unkno
   const payload: Record<string, unknown> = {
     name: command.name,
     description: command.description,
-    options: (command.options ?? []).map((option) => ({
-      name: option.name,
-      description: option.description,
-      type: TYPE_MAP[option.type ?? "string"],
-      required: option.required ?? false,
-      choices: option.choices,
-    })),
+    options: (command.options ?? []).map((option) => {
+      const entry: Record<string, unknown> = {
+        name: option.name,
+        description: option.description,
+        type: TYPE_MAP[option.type ?? "string"],
+        required: option.required ?? false,
+        choices: option.choices,
+      };
+      // Discord only sends autocomplete interactions for options registered
+      // with this flag, so it must reach the payload.
+      if (option.autocomplete === true) entry.autocomplete = true;
+      return entry;
+    }),
   };
   const gated = defaultMemberPermissions(command);
   if (gated !== undefined) {

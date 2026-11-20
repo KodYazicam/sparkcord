@@ -44,6 +44,10 @@ All notable changes to this project are documented here. The format follows
   `commands.set()`. `name: 42`, `description: 42`, `description: {}` and the
   option equivalents used to print `command(s) OK` and then fail at boot with
   `50035 Invalid Form Body`, dropping every command.
+- Slash command options can set `autocomplete: true`; the flag now reaches
+  `application.commands.set()`, so Discord opens the picker and the
+  `onAutocomplete` handler finally runs. `validate` rejects the flag on an
+  unsupported type or together with `choices`, matching Discord's rules.
 - A command whose `run()` throws is now logged once as
   `[sparkcord] command <name> failed (<kind>): …` before the generic
   "Command failed. Check the bot logs." reply. Previously the error was

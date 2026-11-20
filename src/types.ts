@@ -6,6 +6,8 @@ export interface CommandOption {
   type?: "string" | "integer" | "boolean" | "user" | "channel" | "role" | "number";
   required?: boolean;
   choices?: Array<{ name: string; value: string | number }>;
+  /** Open Discord's autocomplete picker for this option; handled by `onAutocomplete`. */
+  autocomplete?: boolean;
 }
 
 export interface CommandContext {

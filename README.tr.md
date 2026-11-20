@@ -106,7 +106,7 @@ const ping: CommandDefinition = {
 export default ping;
 ```
 
-Seçenek `type` değerleri: `string` (varsayılan), `integer`, `boolean`, `user`, `channel`, `role`, `number`. `kind: "slash"` komutu `!name` çağrısına **yanıt vermez**; `kind: "prefix"` slash komutu olarak kaydedilmez.
+Seçenek `type` değerleri: `string` (varsayılan), `integer`, `boolean`, `user`, `channel`, `role`, `number`. `string`, `integer` veya `number` seçeneğinde `autocomplete: true` ayarlayarak Discord'un otomatik tamamlama listesini açabilirsiniz; kayıtlı `onAutocomplete` işleyicisi odaklanan seçeneği alır. Discord bu bayrağı `choices` ile birlikte reddeder. `kind: "slash"` komutu `!name` çağrısına **yanıt vermez**; `kind: "prefix"` slash komutu olarak kaydedilmez.
 
 Prefix argümanları `command.options` üzerine **sırayla** eşlenir (`!ban 123 spam` → `{ user: "123", reason: "spam" }`). Tamsayı ve boolean değerler dönüştürülür; artan sözcükler `ctx.args` içinde kalır. Slash tarafında `ctx.options` alanı `interaction.options.data` üzerinden doldurulur.
 

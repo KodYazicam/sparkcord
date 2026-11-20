@@ -181,6 +181,8 @@ export default ping;
 
 Option `type` values: `string` (default), `integer`, `boolean`, `user`, `channel`, `role`, `number`.
 
+Set `autocomplete: true` on a `string`, `integer`, or `number` option to open Discord's autocomplete picker; the registered `onAutocomplete` handler receives the focused option. Discord rejects the flag together with `choices`.
+
 `kind: "slash"` will **not** respond to `!name`. `kind: "prefix"` is not registered as a slash command.
 
 ## Slash and prefix options

@@ -106,7 +106,7 @@ const ping: CommandDefinition = {
 export default ping;
 ```
 
-Werte für den Options-`type`: `string` (Standard), `integer`, `boolean`, `user`, `channel`, `role`, `number`. `kind: "slash"` antwortet **nicht** auf `!name`; `kind: "prefix"` wird nicht als Slash-Befehl registriert.
+Werte für den Options-`type`: `string` (Standard), `integer`, `boolean`, `user`, `channel`, `role`, `number`. Mit `autocomplete: true` auf einem `string`-, `integer`- oder `number`-Feld öffnet Discord die Autovervollständigung; der registrierte `onAutocomplete`-Handler erhält das fokussierte Feld. Zusammen mit `choices` lehnt Discord das Flag ab. `kind: "slash"` antwortet **nicht** auf `!name`; `kind: "prefix"` wird nicht als Slash-Befehl registriert.
 
 Prefix-Argumente werden **der Reihe nach** auf `command.options` abgebildet (`!ban 123 spam` → `{ user: "123", reason: "spam" }`). Integer und Booleans werden umgewandelt; überschüssige Wörter bleiben in `ctx.args`. Bei Slash wird `ctx.options` aus `interaction.options.data` gefüllt.
 
