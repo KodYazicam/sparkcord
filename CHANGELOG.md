@@ -39,6 +39,11 @@ All notable changes to this project are documented here. The format follows
   a number threw a `TypeError` that aborted the whole run, and an alias with a
   space passed validation but could never be invoked. Aliases must be an array
   of lowercase names of 1-32 chars `[a-z0-9_-]`.
+- `sparkcord validate` now rejects a non-string command or option `name` /
+  `description` instead of letting `RegExp.test()` coerce it and passing it to
+  `commands.set()`. `name: 42`, `description: 42`, `description: {}` and the
+  option equivalents used to print `command(s) OK` and then fail at boot with
+  `50035 Invalid Form Body`, dropping every command.
 - A command whose `run()` throws is now logged once as
   `[sparkcord] command <name> failed (<kind>): …` before the generic
   "Command failed. Check the bot logs." reply. Previously the error was

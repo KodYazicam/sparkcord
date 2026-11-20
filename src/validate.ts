@@ -48,12 +48,25 @@ function checkOption(option: CommandOption, path: string, issues: ValidationIssu
     issues.push({ path, message: "option entry is not an object" });
     return;
   }
-  if (!option.name || !NAME_PATTERN.test(option.name)) {
-    issues.push({ path, message: `${where} needs a lowercase name of 1-32 chars [a-z0-9_-]` });
+  const nameMessage = `${where} needs a lowercase name of 1-32 chars [a-z0-9_-]`;
+  if (typeof option.name !== "string") {
+    issues.push({
+      path,
+      message: option.name ? `${where} name must be a string (got ${JSON.stringify(option.name)})` : nameMessage,
+    });
+  } else if (!option.name || !NAME_PATTERN.test(option.name)) {
+    issues.push({ path, message: nameMessage });
   }
-  if (!option.description) {
+  if (typeof option.description !== "string") {
+    issues.push({
+      path,
+      message: option.description
+        ? `${where} description must be a string (got ${JSON.stringify(option.description)})`
+        : `${where} needs a description`,
+    });
+  } else if (!option.description) {
     issues.push({ path, message: `${where} needs a description` });
-  } else if (typeof option.description === "string" && option.description.length > MAX_TEXT) {
+  } else if (option.description.length > MAX_TEXT) {
     issues.push({
       path,
       message: `${where} description is ${option.description.length} chars; Discord allows at most ${MAX_TEXT}`,
@@ -124,14 +137,25 @@ export function validateDefinition(definition: CommandDefinition, path: string):
   if (!definition || typeof definition !== "object") {
     return [{ path, message: "module must export a command object" }];
   }
-  if (!definition.name || !NAME_PATTERN.test(definition.name)) {
-    issues.push({ path, message: `name must be 1-32 chars of [a-z0-9_-] (got ${JSON.stringify(definition.name)})` });
-  }
-  if (!definition.description || definition.description.length > 100) {
+  const nameMessage = `name must be 1-32 chars of [a-z0-9_-] (got ${JSON.stringify(definition.name)})`;
+  const descriptionMessage = `description is required and must be 1-100 chars (got ${definition.description?.length ?? 0})`;
+  if (typeof definition.name !== "string") {
     issues.push({
       path,
-      message: `description is required and must be 1-100 chars (got ${definition.description?.length ?? 0})`,
+      message: definition.name ? `name must be a string (got ${JSON.stringify(definition.name)})` : nameMessage,
     });
+  } else if (!definition.name || !NAME_PATTERN.test(definition.name)) {
+    issues.push({ path, message: nameMessage });
+  }
+  if (typeof definition.description !== "string") {
+    issues.push({
+      path,
+      message: definition.description
+        ? `description must be a string (got ${JSON.stringify(definition.description)})`
+        : descriptionMessage,
+    });
+  } else if (!definition.description || definition.description.length > 100) {
+    issues.push({ path, message: descriptionMessage });
   }
   if (definition.kind !== undefined && !["slash", "prefix", "both"].includes(definition.kind)) {
     issues.push({ path, message: `kind must be slash, prefix, or both (got ${JSON.stringify(definition.kind)})` });
