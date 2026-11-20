@@ -17,6 +17,30 @@ const CHOICE_TYPES = new Set(["string", "integer", "number"]);
 const MAX_OPTIONS = 25;
 const MAX_CHOICES = 25;
 const MAX_TEXT = 100;
+// Discord types each choice value after the option type. INTEGER accepts only
+// whole numbers in the safe-integer range; NUMBER accepts any finite double.
+const MIN_INTEGER = Number.MIN_SAFE_INTEGER;
+const MAX_INTEGER = Number.MAX_SAFE_INTEGER;
+
+function choiceValueProblem(
+  type: "string" | "integer" | "number",
+  value: string | number | undefined,
+): string | null {
+  if (type === "string") {
+    return typeof value === "string" ? null : "must be a string because the option type is string";
+  }
+  if (type === "integer") {
+    const whole =
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value >= MIN_INTEGER &&
+      value <= MAX_INTEGER;
+    return whole ? null : `must be a whole number within ${MIN_INTEGER}..${MAX_INTEGER} because the option type is integer`;
+  }
+  return typeof value === "number" && Number.isFinite(value)
+    ? null
+    : "must be a finite number because the option type is number";
+}
 
 function checkOption(option: CommandOption, path: string, issues: ValidationIssue[]): void {
   const where = `${path} option ${JSON.stringify(option?.name ?? "")}`;
@@ -39,6 +63,12 @@ function checkOption(option: CommandOption, path: string, issues: ValidationIssu
     issues.push({
       path,
       message: `${where} has unknown type ${JSON.stringify(option.type)} (allowed: ${[...OPTION_TYPES].join(", ")})`,
+    });
+  }
+  if (option.required !== undefined && typeof option.required !== "boolean") {
+    issues.push({
+      path,
+      message: `${where} required must be a boolean (got ${typeof option.required})`,
     });
   }
   if (option.choices === undefined) return;
@@ -74,6 +104,16 @@ function checkOption(option: CommandOption, path: string, issues: ValidationIssu
         path,
         message: `${where} has a choice value of ${choice.value.length} chars; Discord allows at most ${MAX_TEXT}`,
       });
+    }
+    const type = option.type ?? "string";
+    if (CHOICE_TYPES.has(type)) {
+      const problem = choiceValueProblem(type as "string" | "integer" | "number", choice?.value);
+      if (problem) {
+        issues.push({
+          path,
+          message: `${where} choice ${JSON.stringify(choice?.name ?? "")} ${problem}`,
+        });
+      }
     }
   }
 }
@@ -134,8 +174,20 @@ export function validateDefinition(definition: CommandDefinition, path: string):
     // Discord rejects the whole payload when a required option follows an
     // optional one, so report every offender instead of the first.
     let sawOptional = false;
+    // Discord requires option names to be unique within one command.
+    const seenOptionNames = new Set<string>();
     for (const option of definition.options) {
       checkOption(option, path, issues);
+      if (typeof option?.name === "string" && option.name) {
+        if (seenOptionNames.has(option.name)) {
+          issues.push({
+            path,
+            message: `option ${JSON.stringify(option.name)} name is duplicated; Discord requires option names to be unique within one command`,
+          });
+        } else {
+          seenOptionNames.add(option.name);
+        }
+      }
       if (option?.required === true) {
         if (sawOptional) {
           issues.push({

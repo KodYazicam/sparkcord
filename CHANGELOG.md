@@ -22,6 +22,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- `sparkcord validate` now rejects three more option specs the Discord API
+  refuses with `50035 Invalid Form Body`: duplicate option names within one
+  command, a non-boolean `required` flag, and a choice `value` whose type does
+  not match the option (a string value on an `integer`/`number` option, a
+  number on a `string` option, or a fractional/out-of-range value on an
+  `integer` option). Previously `validate` exited `0` and slash registration
+  failed at startup, dropping every command from the picker.
 - A command whose `run()` throws is now logged once as
   `[sparkcord] command <name> failed (<kind>): …` before the generic
   "Command failed. Check the bot logs." reply. Previously the error was

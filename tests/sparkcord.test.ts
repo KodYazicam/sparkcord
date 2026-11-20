@@ -692,6 +692,101 @@ describe("validate Discord option limits", () => {
   });
 });
 
+describe("validate option names and value types", () => {
+  const messagesFor = (definition: CommandDefinition) =>
+    validateDefinition(definition, "options.js").map((issue) => issue.message);
+
+  it("rejects duplicate option names in one command", () => {
+    const messages = messagesFor({
+      ...ping,
+      options: [
+        { name: "user", description: "first target", type: "user" },
+        { name: "user", description: "second target", type: "user" },
+      ],
+    });
+    expect(
+      messages.some((message) => message.includes('option "user"') && message.includes("duplicat")),
+    ).toBe(true);
+  });
+
+  it("rejects a non-boolean required flag", () => {
+    const messages = messagesFor({
+      ...ping,
+      options: [{ name: "user", description: "who", type: "user", required: "yes" as unknown as boolean }],
+    });
+    expect(
+      messages.some(
+        (message) =>
+          message.includes('option "user"') && message.includes("required") && message.includes("boolean"),
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects a string choice value on an integer option", () => {
+    const messages = messagesFor({
+      ...ping,
+      options: [{ name: "count", description: "how many", type: "integer", choices: [{ name: "one", value: "1" }] }],
+    });
+    expect(
+      messages.some((message) => message.includes('option "count"') && message.includes("integer")),
+    ).toBe(true);
+  });
+
+  it("rejects fractional and out-of-range choice values on an integer option", () => {
+    const fractional = messagesFor({
+      ...ping,
+      options: [{ name: "count", description: "how many", type: "integer", choices: [{ name: "half", value: 1.5 }] }],
+    });
+    expect(fractional.some((message) => message.includes('choice "half"'))).toBe(true);
+
+    const tooLarge = messagesFor({
+      ...ping,
+      options: [
+        {
+          name: "count",
+          description: "how many",
+          type: "integer",
+          choices: [{ name: "huge", value: Number.MAX_SAFE_INTEGER + 2 }],
+        },
+      ],
+    });
+    expect(tooLarge.some((message) => message.includes('choice "huge"'))).toBe(true);
+  });
+
+  it("rejects non-numeric choice values on a number option", () => {
+    const messages = messagesFor({
+      ...ping,
+      options: [{ name: "score", description: "how much", type: "number", choices: [{ name: "na", value: "n/a" }] }],
+    });
+    expect(messages.some((message) => message.includes('option "score"') && message.includes("number"))).toBe(
+      true,
+    );
+  });
+
+  it("rejects non-string choice values on a string option", () => {
+    const messages = messagesFor({
+      ...ping,
+      options: [{ name: "mode", description: "play mode", type: "string", choices: [{ name: "one", value: 1 }] }],
+    });
+    expect(
+      messages.some((message) => message.includes('option "mode"') && message.includes("string")),
+    ).toBe(true);
+  });
+
+  it("accepts unique names, boolean required, and matching choice value types", () => {
+    expect(
+      messagesFor({
+        ...ping,
+        options: [
+          { name: "mode", description: "play mode", type: "string", required: true, choices: [{ name: "fast", value: "fast" }] },
+          { name: "count", description: "how many", type: "integer", required: false, choices: [{ name: "one", value: 1 }] },
+          { name: "score", description: "how much", type: "number", choices: [{ name: "half", value: 0.5 }] },
+        ],
+      }),
+    ).toEqual([]);
+  });
+});
+
 describe("handler error containment", () => {
   const boom = {
     customId: "boom",
