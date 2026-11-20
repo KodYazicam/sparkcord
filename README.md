@@ -277,6 +277,8 @@ node dist/cli.js --help
 node dist/cli.js --version
 ```
 
+The installed `sparkcord` binary (`node_modules/.bin/sparkcord`, `npm link`, or `npx sparkcord` once published) exposes the same commands and follows the package `bin` symlink.
+
 `init` copies `templates/basic` into `dir` (`.` if omitted). Absolute paths work. Missing template from a broken install exits `1` instead of writing a stub and claiming success.
 
 `validate` loads a commands directory the same way the bot does, then lints every definition **without a Discord token or client**:

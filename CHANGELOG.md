@@ -29,6 +29,11 @@ All notable changes to this project are documented here. The format follows
   number on a `string` option, or a fractional/out-of-range value on an
   `integer` option). Previously `validate` exited `0` and slash registration
   failed at startup, dropping every command from the picker.
+- The package `bin` entry (`sparkcord init`, `sparkcord validate`, `--help`,
+  `--version`) no longer exits silently when npm invokes it through the
+  `node_modules/.bin` symlink. `invokedDirectly()` now compares canonical
+  (`realpath`) paths instead of lexical ones, so it recognises the same file
+  behind a link while direct `node dist/cli.js` runs stay unchanged.
 - A command whose `run()` throws is now logged once as
   `[sparkcord] command <name> failed (<kind>): …` before the generic
   "Command failed. Check the bot logs." reply. Previously the error was
