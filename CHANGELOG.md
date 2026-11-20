@@ -34,6 +34,11 @@ All notable changes to this project are documented here. The format follows
   `node_modules/.bin` symlink. `invokedDirectly()` now compares canonical
   (`realpath`) paths instead of lexical ones, so it recognises the same file
   behind a link while direct `node dist/cli.js` runs stay unchanged.
+- `sparkcord validate` now rejects a malformed `aliases` field instead of
+  trusting it. A string was iterated as characters (registering `h`/`e`/`l`/`p`),
+  a number threw a `TypeError` that aborted the whole run, and an alias with a
+  space passed validation but could never be invoked. Aliases must be an array
+  of lowercase names of 1-32 chars `[a-z0-9_-]`.
 - A command whose `run()` throws is now logged once as
   `[sparkcord] command <name> failed (<kind>): …` before the generic
   "Command failed. Check the bot logs." reply. Previously the error was

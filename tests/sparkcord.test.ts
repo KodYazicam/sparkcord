@@ -631,6 +631,38 @@ describe("validate", () => {
     expect(validateDefinition(ping, "ping.js")).toEqual([]);
   });
 
+  it("rejects malformed aliases instead of silently accepting or throwing", () => {
+    const messages = (aliases: unknown) =>
+      validateDefinition({ ...ping, aliases } as unknown as CommandDefinition, "bad.js").map(
+        (i) => i.message,
+      );
+
+    // A string used to be iterated as characters, so "help" registered h/e/l/p.
+    expect(messages("help").some((m) => m.includes("aliases must be an array"))).toBe(true);
+    // A non-iterable used to throw a TypeError out of validateCommands.
+    expect(messages(42).some((m) => m.includes("aliases must be an array"))).toBe(true);
+
+    const malformed = messages(["ok", "two words", "UP", 7, ""]);
+    expect(malformed.some((m) => m.includes('"two words"'))).toBe(true);
+    expect(malformed.some((m) => m.includes('"UP"'))).toBe(true);
+    expect(malformed.filter((m) => m.includes("alias ")).length).toBe(4);
+
+    // A well-formed alias list still passes.
+    expect(messages(["h", "help-me", "a_b"])).toEqual([]);
+  });
+
+  it("reports a malformed aliases field from a real module without aborting the run", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "sparkcord-validate-alias-"));
+    writeFileSync(
+      join(dir, "bad-alias.js"),
+      'export default { name: "ping", description: "pong", aliases: 42, run: () => "pong" };\n',
+    );
+
+    const { issues, commands } = await validateCommands(dir);
+    expect(commands).toBe(1);
+    expect(issues.some((i) => i.message.includes("aliases must be an array"))).toBe(true);
+  });
+
   it("flags unknown Discord permission names", () => {
     const messages = validateDefinition(
       { ...ping, permissions: ["BanMembers", "BanMember"] },

@@ -13,10 +13,17 @@ export class CommandRegistry {
     if (aliasOwner) {
       throw new Error(`Duplicate command: ${name} (already an alias of ${aliasOwner})`);
     }
+    const aliases = command.definition.aliases;
+    if (aliases !== undefined && !Array.isArray(aliases)) {
+      throw new Error(`Invalid aliases for ${name}: expected an array of lowercase names`);
+    }
     // Collect and validate every alias before writing anything, so a rejected
     // registration leaves neither the command nor a partial alias set behind.
     const keys: string[] = [];
-    for (const alias of command.definition.aliases ?? []) {
+    for (const alias of aliases ?? []) {
+      if (typeof alias !== "string") {
+        throw new Error(`Invalid alias for ${name}: expected a string`);
+      }
       const key = alias.toLowerCase();
       if (key === name || this.byName.has(key) || this.aliases.has(key) || keys.includes(key)) {
         throw new Error(`Duplicate alias: ${alias}`);

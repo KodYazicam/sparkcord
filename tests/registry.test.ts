@@ -55,6 +55,14 @@ describe("registry name/alias collisions", () => {
     expect(reg.resolve("dup")).toBeUndefined();
     expect(reg.resolve("same")).toBeUndefined();
   });
+
+  it("rejects a malformed aliases field with a clear error instead of a TypeError", () => {
+    const reg = new CommandRegistry();
+    const malformed = { ...command({ name: "oops" }), aliases: 42 } as unknown as CommandDefinition;
+
+    expect(() => reg.register({ definition: malformed, path: "oops.ts" })).toThrow(/Invalid aliases/);
+    expect(reg.resolve("oops")).toBeUndefined();
+  });
 });
 
 describe("validate name/alias collisions", () => {
