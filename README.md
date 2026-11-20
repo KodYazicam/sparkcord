@@ -213,6 +213,8 @@ An event handler may throw or reject; sparkcord contains it. The listener logs `
 
 Button / any select menu (string, user, role, mentionable, channel) / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
 
+An autocomplete handler receives `{ raw, focused, bot }`. `focused` is the text currently typed into the focused option (`""` when Discord omits it), so a handler can filter `ctx.focused` directly.
+
 If a component or autocomplete handler throws, the error is contained: sparkcord logs `[sparkcord] <kind> <id> failed: …` and `bot.handleInteraction` returns `{ ok: false, reason }` instead of rejecting, so one broken button cannot crash the bot. The `interactionCreate` and `messageCreate` listeners log anything unexpected rather than letting it become an unhandled rejection.
 
 ## Command context

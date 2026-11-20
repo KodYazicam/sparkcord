@@ -68,6 +68,45 @@ export type AutocompleteHandler = {
   run: (ctx: { raw: unknown; focused: string; bot: unknown }) => unknown | Promise<unknown>;
 };
 
+/**
+ * The text the member has typed into the focused autocomplete option.
+ *
+ * discord.js' `getFocused(true)` returns the whole option object
+ * ({ name, type, value, focused }), so only the argument-less call yields the
+ * value. Accept both shapes: wrapper resolvers in tests and older versions may
+ * return the object, and discord.js throws when no option is focused.
+ */
+function focusedValue(raw: unknown): string {
+  const options = (raw as { options?: { getFocused?: (getFull?: boolean) => unknown } }).options;
+  if (typeof options?.getFocused !== "function") return "";
+
+  const coerce = (value: unknown): string | undefined => {
+    if (typeof value === "string") return value;
+    if (typeof value === "number") return String(value);
+    if (value && typeof value === "object" && "value" in value) {
+      const nested = (value as { value?: unknown }).value;
+      if (typeof nested === "string") return nested;
+      if (typeof nested === "number") return String(nested);
+    }
+    return undefined;
+  };
+
+  try {
+    const value = coerce(options.getFocused());
+    if (value !== undefined) return value;
+  } catch {
+    // No focused option; autocomplete interactions always have one, but a
+    // malformed payload must not reject the router.
+  }
+  try {
+    const value = coerce(options.getFocused(true));
+    if (value !== undefined) return value;
+  } catch {
+    // Same as above.
+  }
+  return "";
+}
+
 export class InteractionRouter {
   readonly components = new Map<string, ComponentHandler>();
   readonly autocomplete = new Map<string, AutocompleteHandler>();
@@ -88,7 +127,7 @@ export class InteractionRouter {
       const name = String((raw as { commandName?: string }).commandName ?? "").toLowerCase();
       const handler = this.autocomplete.get(name);
       if (!handler) return { ok: false, reason: "no-autocomplete" };
-      const focused = String((raw as { options?: { getFocused?: (v?: boolean) => unknown } }).options?.getFocused?.(true) ?? "");
+      const focused = focusedValue(raw);
       const value = await handler.run({ raw, focused, bot });
       return { ok: true, value };
     }
