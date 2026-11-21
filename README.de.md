@@ -106,7 +106,7 @@ const ping: CommandDefinition = {
 export default ping;
 ```
 
-Werte für den Options-`type`: `string` (Standard), `integer`, `boolean`, `user`, `channel`, `role`, `number`. Mit `autocomplete: true` auf einem `string`-, `integer`- oder `number`-Feld öffnet Discord die Autovervollständigung; der registrierte `onAutocomplete`-Handler erhält das fokussierte Feld. Zusammen mit `choices` lehnt Discord das Flag ab. `kind: "slash"` antwortet **nicht** auf `!name`; `kind: "prefix"` wird nicht als Slash-Befehl registriert.
+Werte für den Options-`type`: `string` (Standard), `integer`, `boolean`, `user`, `channel`, `role`, `number`. Mit `autocomplete: true` auf einem `string`-, `integer`- oder `number`-Feld öffnet Discord die Autovervollständigung; der registrierte `onAutocomplete`-Handler erhält das fokussierte Feld. Zusammen mit `choices` lehnt Discord das Flag ab. `kind: "slash"` antwortet **nicht** auf `!name`; `kind: "prefix"` wird nicht als Slash-Befehl registriert. Der registrierte Handler läuft nur, wenn dieselben `ownerOnly`-, `guildOnly`- und `permissions`-Prüfungen wie bei `run` bestanden sind.
 
 Prefix-Argumente werden **der Reihe nach** auf `command.options` abgebildet (`!ban 123 spam` → `{ user: "123", reason: "spam" }`). Integer und Booleans werden umgewandelt; überschüssige Wörter bleiben in `ctx.args`. Bei Slash wird `ctx.options` aus `interaction.options.data` gefüllt.
 
@@ -123,7 +123,7 @@ Prüfreihenfolge:
 
 Bei Commands mit `permissions` setzt `toSlashPayload` zusätzlich `default_member_permissions` auf die OR-Verknüpfung dieser Discord-Flags. Discord blendet den Befehl dann für Mitglieder ohne die Berechtigung aus; `Administrator` sieht ihn weiterhin. Ein unbekannter Berechtigungsname löst beim Erzeugen des Payloads einen Fehler aus und wird von `sparkcord validate` gemeldet.
 
-Abgelehnte Aufrufe führen `run` **nicht** aus. Mit `denyReplies: true` (Standard) sendet sparkcord eine ephemere Antwort für Slash und eine Kanalantwort für Prefix. Der Store entfernt abgelaufene Cooldowns, sobald er 500 Schlüssel überschreitet.
+Abgelehnte Aufrufe führen `run` **nicht** aus. Mit `denyReplies: true` (Standard) sendet sparkcord eine ephemere Antwort für Slash und eine Kanalantwort für Prefix. Autovervollständigungs-Handler durchlaufen dieselben `ownerOnly`-, `guildOnly`- und `permissions`-Prüfungen: Ein unberechtigtes Mitglied erhält keine Vorschläge und der Handler wird nicht ausgeführt. Der Store entfernt abgelaufene Cooldowns, sobald er 500 Schlüssel überschreitet.
 
 ## Intents
 

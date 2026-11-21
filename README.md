@@ -195,6 +195,8 @@ Prefix: arguments are mapped **in order** onto `command.options` (`!ban 123 spam
 
 Denied invocations (`ownerOnly`, missing permission, guild-only, cooldown) **do not** run `run`. With `denyReplies: true` (default) sparkcord sends an ephemeral reply for slash and a channel reply for prefix. Set `denyReplies: false` if you want to handle UX yourself.
 
+Autocomplete handlers are gated by the same `ownerOnly`, `guildOnly`, and `permissions` checks before they run: an unauthorized member receives no suggestions and the handler is never invoked.
+
 Cooldown keys are `command:userId`. The store garbage-collects expired entries once it grows past 500 keys so a long-lived process does not leak forever.
 
 ## Event modules
@@ -215,7 +217,7 @@ An event handler may throw or reject; sparkcord contains it. The listener logs `
 
 Button / any select menu (string, user, role, mentionable, channel) / modal / autocomplete: `bot.interactions.onComponent({ customId: "ticket", run })` and `onAutocomplete({ command: "ban", run })`. `customId` first segment is allowlisted (`[a-zA-Z0-9-]`); path-like ids are ignored.
 
-An autocomplete handler receives `{ raw, focused, bot }`. `focused` is the text currently typed into the focused option (`""` when Discord omits it), so a handler can filter `ctx.focused` directly.
+An autocomplete handler receives `{ raw, focused, bot }`. `focused` is the text currently typed into the focused option (`""` when Discord omits it), so a handler can filter `ctx.focused` directly. It runs only when the command's `ownerOnly`, `guildOnly`, and `permissions` checks pass, exactly like `run`.
 
 If a component or autocomplete handler throws, the error is contained: sparkcord logs `[sparkcord] <kind> <id> failed: …` and `bot.handleInteraction` returns `{ ok: false, reason }` instead of rejecting, so one broken button cannot crash the bot. The `interactionCreate` and `messageCreate` listeners log anything unexpected rather than letting it become an unhandled rejection.
 
