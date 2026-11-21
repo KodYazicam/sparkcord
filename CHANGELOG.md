@@ -17,6 +17,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Security
 
+- Autocomplete handlers now pass the same `ownerOnly`, `guildOnly`, and
+  `permissions` gate as slash and prefix commands. Discord sends autocomplete
+  interactions before any reply, and `handleInteraction()` used to dispatch
+  them directly, so a member refused by `/secret` could still run its
+  autocomplete handler and read the suggestions. A denied member now gets
+  `{ ok: false, reason }` with no suggestions and the handler is not invoked.
 - Upgraded `vitest` and `@vitest/coverage-v8` to 5.1.0, clearing the dev-only
   dependency advisories.
 

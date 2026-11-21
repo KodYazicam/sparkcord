@@ -106,7 +106,7 @@ const ping: CommandDefinition = {
 export default ping;
 ```
 
-Seçenek `type` değerleri: `string` (varsayılan), `integer`, `boolean`, `user`, `channel`, `role`, `number`. `string`, `integer` veya `number` seçeneğinde `autocomplete: true` ayarlayarak Discord'un otomatik tamamlama listesini açabilirsiniz; kayıtlı `onAutocomplete` işleyicisi odaklanan seçeneği alır. Discord bu bayrağı `choices` ile birlikte reddeder. `kind: "slash"` komutu `!name` çağrısına **yanıt vermez**; `kind: "prefix"` slash komutu olarak kaydedilmez.
+Seçenek `type` değerleri: `string` (varsayılan), `integer`, `boolean`, `user`, `channel`, `role`, `number`. `string`, `integer` veya `number` seçeneğinde `autocomplete: true` ayarlayarak Discord'un otomatik tamamlama listesini açabilirsiniz; kayıtlı `onAutocomplete` işleyicisi odaklanan seçeneği alır. Discord bu bayrağı `choices` ile birlikte reddeder. `kind: "slash"` komutu `!name` çağrısına **yanıt vermez**; `kind: "prefix"` slash komutu olarak kaydedilmez. Kayıtlı işleyici, `run` ile aynı `ownerOnly`, `guildOnly` ve `permissions` denetimlerinden geçmeden çalışmaz.
 
 Prefix argümanları `command.options` üzerine **sırayla** eşlenir (`!ban 123 spam` → `{ user: "123", reason: "spam" }`). Tamsayı ve boolean değerler dönüştürülür; artan sözcükler `ctx.args` içinde kalır. Slash tarafında `ctx.options` alanı `interaction.options.data` üzerinden doldurulur.
 
@@ -123,7 +123,7 @@ Prefix argümanları `command.options` üzerine **sırayla** eşlenir (`!ban 123
 
 `permissions` bildiren komutlarda `toSlashPayload` ayrıca `default_member_permissions` alanını bu Discord bayraklarının OR'u olarak gönderir. Discord komutu yetkisi olmayan üyelerden gizler; `Administrator` görür. Bilinmeyen bir izin adı payload oluşturulurken hata verir ve `sparkcord validate` tarafından bildirilir.
 
-Reddedilen çağrılar `run` fonksiyonunu **çalıştırmaz**. `denyReplies: true` (varsayılan) iken sparkcord slash için ephemeral, prefix için kanal yanıtı gönderir. Depo 500 anahtarı geçtiğinde süresi dolmuş bekleme kayıtlarını temizler.
+Reddedilen çağrılar `run` fonksiyonunu **çalıştırmaz**. `denyReplies: true` (varsayılan) iken sparkcord slash için ephemeral, prefix için kanal yanıtı gönderir. Otomatik tamamlama işleyicileri de aynı `ownerOnly`, `guildOnly` ve `permissions` denetimlerinden geçer: yetkisiz üye öneri almaz ve işleyici çalışmaz. Depo 500 anahtarı geçtiğinde süresi dolmuş bekleme kayıtlarını temizler.
 
 ## Intent'ler
 

@@ -122,6 +122,24 @@ export class SparkBot {
       member?: { permissions?: { toArray?: () => string[] } };
     };
     const kind = interactionKind(interaction);
+    // Autocomplete never reaches invoke(), so apply the same command gate here.
+    // Discord sends these interactions before any reply, so a denied member must
+    // neither run the handler nor receive its suggestions.
+    if (kind === "autocomplete") {
+      const loaded = ix.commandName ? this.commands.resolve(ix.commandName) : undefined;
+      if (loaded) {
+        const denied = checkCommandAccess(
+          loaded.definition,
+          {
+            userId: ix.user?.id ?? "",
+            inGuild: Boolean(ix.guildId),
+            memberPermissions: new Set(ix.member?.permissions?.toArray?.() ?? []),
+          },
+          this.options.owners ?? [],
+        );
+        if (denied) return { ok: false, reason: denied };
+      }
+    }
     if (kind === "button" || kind === "select" || kind === "modal" || kind === "autocomplete") {
       try {
         return await this.interactions.dispatch(interaction, this);
