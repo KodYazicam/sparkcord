@@ -31,10 +31,10 @@ npm start
 `npm start` runs:
 
 ```text
-node --env-file=.env --experimental-strip-types src/index.ts
+node --experimental-strip-types src/index.ts
 ```
 
-`src/load-env.ts` also parses `.env` so missing `--env-file` still works.
+`src/load-env.ts` parses `.env` before the token is read, so `npm start` works with or without a `.env` file and no `dotenv` package is needed.
 
 ## Layout
 

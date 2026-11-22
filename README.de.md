@@ -29,7 +29,7 @@ sparkcord ist eine dünne Schicht über Discord.js. Sie schreiben Command-Module
 | Bestandteil | Version |
 | --- | --- |
 | sparkcord **Bibliothek** | Node **20+**, kompilierte `.js`-Command-Dateien oder Node mit TypeScript-Strip |
-| Starter aus `sparkcord init` | Node **22.6+** (`--experimental-strip-types` + `--env-file`) |
+| Starter aus `sparkcord init` | Node **22.6+** (`--experimental-strip-types`) |
 | discord.js | **v14** (erforderliche Peer-Dependency) |
 
 Das Bot-Token erhalten Sie im [Discord Developer Portal](https://discord.com/developers/applications). Aktivieren Sie **Message Content Intent**, wenn Sie Prefix-Befehle nutzen. `discord.js` ist eine **erforderliche** Peer-Dependency.

@@ -29,7 +29,7 @@ sparkcord, Discord.js üzerine ince bir katmandır. Siz komut modülleri yazars�
 | Bileşen | Sürüm |
 | --- | --- |
 | sparkcord **kitaplığı** | Node **20+**, derlenmiş `.js` komut dosyaları veya TypeScript strip |
-| `sparkcord init` ile gelen başlangıç | Node **22.6+** (`--experimental-strip-types` + `--env-file`) |
+| `sparkcord init` ile gelen başlangıç | Node **22.6+** (`--experimental-strip-types`) |
 | discord.js | **v14** (zorunlu peer bağımlılık) |
 
 Bot token'ını [Discord Developer Portal](https://discord.com/developers/applications) üzerinden alın. Prefix komutları kullanacaksanız **Message Content Intent** ayarını açın. `discord.js` **zorunlu** bir peer bağımlılıktır.
