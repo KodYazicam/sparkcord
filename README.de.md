@@ -45,14 +45,13 @@ npm ci
 npm run build
 node dist/cli.js init ../my-bot
 cd ../my-bot
-# point package.json at the clone, then:
 cp .env.example .env
 # put DISCORD_TOKEN=... in .env
 npm install
 npm start
 ```
 
-`init` überschreibt eine vorhandene `package.json` nur mit `--force`. Der erzeugte Bot verbindet in `src/index.ts` `Client` + `createSparkBot` + `attach` + `login`; `.env` lädt `src/load-env.ts`, unter Node 22.6+ sind `dotenv` und `tsx` nicht nötig.
+`init` überschreibt eine vorhandene `package.json` nur mit `--force`. Die erzeugte `package.json` verweist mit einem relativen `file:`-Pfad auf dieses Checkout, sodass `npm install` ohne manuelle Anpassung funktioniert. Der erzeugte Bot verbindet in `src/index.ts` `Client` + `createSparkBot` + `attach` + `login`; `.env` lädt `src/load-env.ts`, unter Node 22.6+ sind `dotenv` und `tsx` nicht nötig.
 
 Einladungslink (`CLIENT_ID` durch Ihre Anwendungs-ID ersetzen). **Verwenden Sie nicht Administrator (`permissions=8`).**
 

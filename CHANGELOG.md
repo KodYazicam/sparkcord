@@ -22,6 +22,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- `sparkcord init` now rewrites the generated `sparkcord` dependency to a
+  relative `file:` path from the new project to the package that produced the
+  scaffold. `node dist/cli.js init ../my-bot` therefore creates a project whose
+  `npm install` links the right checkout; previously `file:..` pointed at the
+  target's parent and the first `import "sparkcord"` failed with
+  `ERR_MODULE_NOT_FOUND`.
 - `sparkcord validate` now rejects three more option specs the Discord API
   refuses with `50035 Invalid Form Body`: duplicate option names within one
   command, a non-boolean `required` flag, and a choice `value` whose type does

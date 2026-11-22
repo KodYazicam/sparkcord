@@ -45,14 +45,13 @@ npm ci
 npm run build
 node dist/cli.js init ../my-bot
 cd ../my-bot
-# point package.json at the clone, then:
 cp .env.example .env
 # put DISCORD_TOKEN=... in .env
 npm install
 npm start
 ```
 
-`init`, `--force` vermediğiniz sürece var olan bir `package.json` dosyasının üzerine yazmayı reddeder. Oluşan bot `src/index.ts` içinde `Client` + `createSparkBot` + `attach` + `login` kurar; `.env` dosyasını `src/load-env.ts` yükler, Node 22.6+ üzerinde `dotenv` veya `tsx` gerekmez.
+`init`, `--force` vermediğiniz sürece var olan bir `package.json` dosyasının üzerine yazmayı reddeder. Oluşan `package.json`, `sparkcord` bağımlılığını göreli bir `file:` yoluyla bu depoya yönlendirir; `npm install` için dosyayı düzenlemeniz gerekmez. Oluşan bot `src/index.ts` içinde `Client` + `createSparkBot` + `attach` + `login` kurar; `.env` dosyasını `src/load-env.ts` yükler, Node 22.6+ üzerinde `dotenv` veya `tsx` gerekmez.
 
 Davet bağlantısı (`CLIENT_ID` yerine uygulama kimliğinizi yazın). **Administrator (`permissions=8`) kullanmayın.**
 
