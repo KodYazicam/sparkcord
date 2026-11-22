@@ -56,7 +56,7 @@ node dist/cli.js init my-bot
 | Piece | Version |
 | --- | --- |
 | sparkcord **library** | Node **20+**, compiled `.js` command files or Node with TypeScript strip |
-| Starter from `sparkcord init` | Node **22.6+** (`--experimental-strip-types` + `--env-file`) |
+| Starter from `sparkcord init` | Node **22.6+** (`--experimental-strip-types`) |
 | discord.js | **v14** (required peer dependency) |
 
 You need a bot token from the [Discord Developer Portal](https://discord.com/developers/applications). Enable **Message Content Intent** if you use prefix commands.
@@ -88,15 +88,15 @@ What you get:
 ```
 my-bot/
   .env.example
-  package.json          # start = node --env-file=.env --experimental-strip-types src/index.ts
+  package.json          # start = node --experimental-strip-types src/index.ts
   src/
     index.ts            # Client + createSparkBot + attach + login
-    load-env.ts         # parses .env even if --env-file is missing
+    load-env.ts         # parses .env before the token is read
     commands/ping.ts
     events/ready.ts
 ```
 
-`.env` is loaded by `src/load-env.ts` (and `--env-file` on `npm start`). You do **not** need `dotenv` or `tsx` on Node 22.6+.
+`.env` is loaded by `src/load-env.ts` on `npm start`, so a missing file falls through to the project's own `Missing DISCORD_TOKEN` message. You do **not** need `dotenv` or `tsx` on Node 22.6+.
 
 Invite URL (replace `CLIENT_ID`). **Do not use Administrator (`permissions=8`).**
 

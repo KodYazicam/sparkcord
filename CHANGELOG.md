@@ -22,6 +22,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- The generated starter no longer runs `node --env-file=.env`, which exited
+  with code 9 before any project module loaded when `.env` was missing. The
+  documented `npm start` flow now reaches `src/load-env.ts` and the project's
+  own `Missing DISCORD_TOKEN` message instead of Node's bare `.env: not found`.
 - `sparkcord validate` now rejects three more option specs the Discord API
   refuses with `50035 Invalid Form Body`: duplicate option names within one
   command, a non-boolean `required` flag, and a choice `value` whose type does

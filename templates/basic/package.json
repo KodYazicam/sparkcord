@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node --env-file=.env --experimental-strip-types src/index.ts"
+    "start": "node --experimental-strip-types src/index.ts"
   },
   "engines": {
     "node": ">=22.6"
