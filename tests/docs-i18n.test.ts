@@ -2,9 +2,23 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { PERMISSION_BITS } from "../src/utils/discord-permissions.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const READMES = ["README.md", "README.tr.md", "README.de.md"] as const;
+
+// The invite link prose in every README names exactly these permissions.
+const INVITE_PERMISSIONS = [
+  "ViewChannel",
+  "SendMessages",
+  "EmbedLinks",
+  "ReadMessageHistory",
+  "UseApplicationCommands",
+] as const;
+const INVITE_BITFIELD = INVITE_PERMISSIONS.reduce(
+  (total, name) => total | PERMISSION_BITS[name],
+  0n,
+).toString();
 
 function read(file: string): string {
   return readFileSync(join(root, file), "utf8");
@@ -68,7 +82,7 @@ describe("translated READMEs", () => {
       const text = read(file);
       expect(text, file).toContain("Node **20+**");
       expect(text, file).toContain("Node **22.6+**");
-      expect(text, file).toContain("274877975552");
+      expect(text, file).toContain(`permissions=${INVITE_BITFIELD}`);
       expect(text, file).toContain("Apache-2.0");
       expect(text, file).toContain("./LICENSE");
     }
@@ -76,6 +90,15 @@ describe("translated READMEs", () => {
       const text = read(file);
       expect(text, file).toContain("./CONTRIBUTING.md");
       expect(text, file).toContain("./SECURITY.md");
+    }
+  });
+
+  it("documents an invite bitfield that matches the permissions it names", () => {
+    expect(INVITE_BITFIELD).toBe("2147568640");
+    for (const file of READMES) {
+      const text = read(file);
+      expect(text, file).toContain(`permissions=${INVITE_BITFIELD}`);
+      expect(text, file).not.toContain("permissions=274877975552");
     }
   });
 });

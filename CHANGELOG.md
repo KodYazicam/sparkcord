@@ -22,6 +22,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- The README invite links now use the permission bitfield they describe
+  (`2147568640`: View Channel, Send Messages, Embed Links, Read Message
+  History, Use Application Commands). The previous value also granted Send
+  Messages in Threads but not Embed Links or Use Application Commands, so a
+  bot invited from the docs could not send the embeds the starter advertises.
 - `sparkcord validate` now rejects three more option specs the Discord API
   refuses with `50035 Invalid Form Body`: duplicate option names within one
   command, a non-boolean `required` flag, and a choice `value` whose type does
