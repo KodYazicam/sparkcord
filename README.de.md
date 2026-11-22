@@ -57,7 +57,7 @@ npm start
 Einladungslink (`CLIENT_ID` durch Ihre Anwendungs-ID ersetzen). **Verwenden Sie nicht Administrator (`permissions=8`).**
 
 ```text
-https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot%20applications.commands&permissions=274877975552
+https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot%20applications.commands&permissions=2147568640
 ```
 
 Dieses Bitfeld umfasst View Channel + Send Messages + Embed Links + Read Message History + Use Application Commands. Beginnen Sie mit einer **Dev-Guild** (`DEV_GUILD_ID`), damit Slash-Befehle in Sekunden statt global erst nach bis zu einer Stunde aktualisiert werden.

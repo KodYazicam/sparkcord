@@ -57,7 +57,7 @@ npm start
 Davet bağlantısı (`CLIENT_ID` yerine uygulama kimliğinizi yazın). **Administrator (`permissions=8`) kullanmayın.**
 
 ```text
-https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot%20applications.commands&permissions=274877975552
+https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot%20applications.commands&permissions=2147568640
 ```
 
 Bu bit alanı View Channel + Send Messages + Embed Links + Read Message History + Use Application Commands izinleridir. Slash komutları küresel kapsamda bir saate kadar gecikebildiği için **geliştirme sunucusu** (`DEV_GUILD_ID`) ile başlayın.

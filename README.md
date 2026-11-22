@@ -101,7 +101,7 @@ my-bot/
 Invite URL (replace `CLIENT_ID`). **Do not use Administrator (`permissions=8`).**
 
 ```
-https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot%20applications.commands&permissions=274877975552
+https://discord.com/oauth2/authorize?client_id=CLIENT_ID&scope=bot%20applications.commands&permissions=2147568640
 ```
 
 That bitfield is View Channel + Send Messages + Embed Links + Read Message History + Use Application Commands. Add Kick/Ban/Manage Channels only if the bot actually moderates.
