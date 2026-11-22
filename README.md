@@ -270,6 +270,8 @@ Payload is built from `toSlashPayload`. You can also call `bot.registerSlash(cli
 
 When a command declares `permissions`, the payload also sets `default_member_permissions` to the OR of those Discord flags. Discord then hides the command from members who cannot use it, while `Administrator` still sees it (matching the runtime check). Commands without `permissions` stay public. An unknown permission name throws during payload build and is reported by `sparkcord validate`, so a typo cannot silently register a gated command as public.
 
+When a command declares `guildOnly: true`, the payload sets `dm_permission: false`. Discord defaults that field to `true`, so without it the command would still appear in the DM command picker and only fail at runtime with "This command can only be used in a server." Commands that omit `guildOnly` keep Discord's default and stay available in DMs.
+
 ## CLI
 
 ```bash
