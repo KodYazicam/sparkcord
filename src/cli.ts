@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join } from "node:path";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateCommands } from "./validate.js";
 import { invokedDirectly } from "./main.js";
@@ -34,6 +34,23 @@ package.json, init refuses unless you pass --force.
 License: Apache-2.0.
 https://github.com/KodYazicam/sparkcord
 `.trim();
+}
+
+function localDependency(target: string, packageRoot: string): string {
+  const path = relative(target, packageRoot).split(sep).join("/");
+  if (!path || path === ".") return "file:.";
+  return path.startsWith("..") ? `file:${path}` : `file:./${path}`;
+}
+
+function pointAtPackage(packagePath: string, target: string, packageRoot: string): void {
+  const pkg = JSON.parse(readFileSync(packagePath, "utf8")) as {
+    dependencies?: Record<string, string>;
+  };
+  pkg.dependencies = {
+    ...(pkg.dependencies ?? {}),
+    sparkcord: localDependency(target, packageRoot),
+  };
+  writeFileSync(packagePath, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
 export async function validateDir(requested: string | undefined, cwd: string): Promise<number> {
@@ -82,12 +99,15 @@ export function run(argv: string[], cwd = process.cwd()): number {
   const requested = argv.find((a, i) => i >= 1 && !a.startsWith("-")) ?? ".";
   const target = isAbsolute(requested) ? requested : join(cwd, requested);
   mkdirSync(target, { recursive: true });
-  if (existsSync(join(target, "package.json")) && !force) {
+  const packagePath = join(target, "package.json");
+  const hadPackageJson = existsSync(packagePath);
+  if (hadPackageJson && !force) {
     console.error(`refusing to overwrite existing project in ${target} (pass --force)`);
     return 1;
   }
   const here = dirname(fileURLToPath(import.meta.url));
-  const template = join(here, "..", "templates", "basic");
+  const packageRoot = dirname(here);
+  const template = join(packageRoot, "templates", "basic");
   if (!existsSync(template)) {
     console.error("sparkcord template is missing from the package (templates/basic). Reinstall sparkcord.");
     return 1;
@@ -100,20 +120,27 @@ export function run(argv: string[], cwd = process.cwd()): number {
       force,
     });
   }
-  if (!existsSync(join(target, "package.json"))) {
+  if (!existsSync(packagePath)) {
     writeFileSync(
-      join(target, "package.json"),
+      packagePath,
       JSON.stringify(
         {
           name: "sparkcord-bot",
           private: true,
           type: "module",
-          dependencies: { sparkcord: "file:..", "discord.js": "^14.16.0" },
+          dependencies: {
+            sparkcord: localDependency(target, packageRoot),
+            "discord.js": "^14.16.0",
+          },
         },
         null,
         2,
       ),
     );
+  }
+  const templatePackage = existsSync(join(template, "package.json"));
+  if (!hadPackageJson || (force && templatePackage)) {
+    pointAtPackage(packagePath, target, packageRoot);
   }
   console.log(`sparkcord project ready in ${target}`);
   console.log("Next: cp .env.example .env  &&  npm install  &&  npm start");

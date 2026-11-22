@@ -74,14 +74,13 @@ npm ci
 npm run build
 node dist/cli.js init ../my-bot
 cd ../my-bot
-# point package.json at the clone, then:
 cp .env.example .env
 # put DISCORD_TOKEN=... in .env
 npm install
 npm start
 ```
 
-`init` refuses to overwrite an existing `package.json` unless you pass `--force`. Existing files are skipped, not clobbered.
+`init` refuses to overwrite an existing `package.json` unless you pass `--force`. Existing files are skipped, not clobbered. The generated `package.json` points its `sparkcord` dependency at this checkout with a relative `file:` path, so `npm install` works without editing it.
 
 What you get:
 
