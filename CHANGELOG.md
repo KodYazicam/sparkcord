@@ -22,6 +22,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- A `guildOnly` command is no longer registered in DMs. `toSlashPayload()` now
+  sends `dm_permission: false`, so Discord hides the command from the DM
+  command picker instead of showing it and rejecting every use with "This
+  command can only be used in a server." Commands without `guildOnly` keep
+  Discord's default and stay available in DMs.
 - `sparkcord validate` now rejects three more option specs the Discord API
   refuses with `50035 Invalid Form Body`: duplicate option names within one
   command, a non-boolean `required` flag, and a choice `value` whose type does

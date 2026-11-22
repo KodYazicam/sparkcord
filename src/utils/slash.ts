@@ -29,6 +29,11 @@ export function toSlashPayload(command: CommandDefinition): Record<string, unkno
       return entry;
     }),
   };
+  // Discord defaults dm_permission to true. A guild-only command must opt out
+  // or it stays visible in the DM picker and is only rejected at runtime.
+  if (command.guildOnly === true) {
+    payload.dm_permission = false;
+  }
   const gated = defaultMemberPermissions(command);
   if (gated !== undefined) {
     payload.default_member_permissions = gated;
